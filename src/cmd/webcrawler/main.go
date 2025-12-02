@@ -1,3 +1,8 @@
+/*
+This file is the main entrypoint of the crawler, calls other packages
+to handle webcrawling given parameters
+*/
+
 package main
 
 import (
@@ -5,15 +10,20 @@ import (
 	"sync"
 	"time"
 
-	parser "github.com/firozt/crawler/internal/Parser"
-	"github.com/firozt/crawler/internal/ThreadSafeQueue"
+	"github.com/firozt/crawler/src/internal/Parser"
+	"github.com/firozt/crawler/src/internal/Repository"
+	"github.com/firozt/crawler/src/internal/ThreadSafeQueue"
 )
 
 func main() {
-	begin("https://en.wikipedia.org/wiki/Chair")
+	// crawlSite("https://en.wikipedia.org/wiki/Chair")
+	db := repository.InitDB() // creates db conn
+	defer db.Close()
+	pageRepo := repository.NewPagesRepository(db) // creates DAO for pages table
+
 }
 
-func begin(url string) {
+func crawlSite(url string) {
 	// initial link queue
 	queue := ThreadSafeQueue.NewThreadSafeQueue[string]()
 	body := parser.ParseSite(url)
@@ -45,7 +55,7 @@ func begin(url string) {
 	for i := 0; i < numWorkers; i++ {
 		wg.Add(1)
 		go worker(i)
-		time.Sleep(1000000)
+		time.Sleep(500000000)
 	}
 	wg.Wait()
 	queue.All()
