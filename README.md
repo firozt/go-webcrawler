@@ -25,38 +25,10 @@
 
 # Implementation
 ### System Diagram of the Webcrawler
-<a href="https://imgbb.com/"><img src="https://i.ibb.co/gFyNQTd2/webcrawler-sysdiagram.png" alt="webcrawler-sysdiagram" border="0"></a>
+![Diagram](images/diagram.png)
 <br>
 The diagram above shows the system diagram of the webcrawler, It checks a thread safe link queue and, requests, parses, traverses the link. Once this process is complete it then extracts the page text content and links contained within the page. The content is saved to a SQLite database to be queried by endpoints whilst the other links are checked to see if it has been visited already / exist within link queue and either skips it or enqueues it to the link queue. This process is repeated until a fixed number of pages are crawled
 ## Endpoints
-
-<!-- ## `POST` /api/v1/crawl
-
-### Description
-
-Starts a web crawl for the specified URL and stores the extracted pages in the database. The crawl runs asynchronously and can follow internal links up to a configurable depth.
-
-
-### HTTP Method & URL
-
-### `POST /api/v1/crawl`
-
-### Request Body
-
-```json
-{
-  "url": "<https://example.com>",
-  "maxDepth": 2,
-  "followExternal": false
-}
-
-```
-
-| Field | Type | Required | Description |
-| --- | --- | --- | --- |
-| url | string | yes | The starting URL to crawl |
-| maxDepth | int | no | Maximum link depth to crawl (default: 2) |
-| followExternal | boolean | no | Whether to follow external domains (default: false) | -->
 
 
 <details>
