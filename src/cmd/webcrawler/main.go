@@ -11,15 +11,16 @@ import (
 	"time"
 
 	"github.com/firozt/crawler/src/internal/Parser"
-	"github.com/firozt/crawler/src/internal/Repository"
+	// "github.com/firozt/crawler/src/internal/Repository"
 	"github.com/firozt/crawler/src/internal/ThreadSafeQueue"
 )
 
 func main() {
 	// crawlSite("https://en.wikipedia.org/wiki/Chair")
-	db := repository.InitDB() // creates db conn
-	defer db.Close()
-	pageRepo := repository.NewPagesRepository(db) // creates DAO for pages table
+	// db := repository.InitDB() // creates db conn
+	// defer db.Close()
+	crawlSite("https://books.toscrape.com/index.html")
+	// pageRepo := repository.NewPagesRepository(db) // creates DAO for pages table
 
 }
 
@@ -32,6 +33,7 @@ func crawlSite(url string) {
 	for _, link := range links {
 		queue.Enqueue(link)
 	}
+	fmt.Println("Links:\n", links)
 
 	// setup worker pool
 	var wg sync.WaitGroup
@@ -47,7 +49,9 @@ func crawlSite(url string) {
 				return
 			}
 			fmt.Printf("Worker %d processing %s\n", id, link)
-			parser.ParseSite(link)
+			body := parser.ParseSite(link)
+			_, newlinks := parser.GetTextAndLinks(body)
+			fmt.Println("Links:\n", newlinks)
 		}
 	}
 
@@ -58,5 +62,5 @@ func crawlSite(url string) {
 		time.Sleep(500000000)
 	}
 	wg.Wait()
-	queue.All()
+
 }

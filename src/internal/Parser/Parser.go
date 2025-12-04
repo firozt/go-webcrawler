@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"errors"
 	"io"
 	"log"
 	"net/http"
@@ -47,6 +48,53 @@ func isValidURL(u string) bool {
 		return false
 	}
 	return true
+}
+
+func absolutePathToUrl(u string, domain string) (string, error) {
+	// '/path/to/html/'
+	var err error
+
+	// check url is valid
+	if len(u) < 1 || !strings.HasPrefix(u, "/") {
+		return "", errors.New("URL passed is not a valid absolute path")
+	}
+
+	return domain + "/" + u, err
+
+}
+
+func relativePathToUrl(u string, curPath string) (string, error) {
+	// ./../path/to/file
+	var err error
+
+	if len(u) < 1 || !strings.HasPrefix(u, ".") {
+		return "", errors.New("URL passed is not a valid relative path")
+	}
+
+	var pathArr []string = strings.Split(curPath, "/")
+	var relPathArr []string = strings.Split(u, "/")
+
+	for _, action := range relPathArr {
+		if action == "." {
+			// skip
+			continue
+		} else if action == ".." {
+			// invalid current path, doesnt make sense
+			if len(pathArr)-1 < 0 {
+				return "", errors.New("Invalid curPath")
+			}
+			pathArr = pathArr[:len(pathArr)-1]
+		} else {
+			pathArr = append(pathArr, action)
+		}
+
+	}
+	return strings.Join(pathArr, "/"), err
+	// curpath = https://www.domain.co.uk/path/original.html
+	// curpathArr = 'https:' '' 'www.domain.co.uk' 'path' 'original.html'
+
+	// u = ./../new/path
+
 }
 
 // general purpose dfs that parses through html nodes looking for queried tag values
@@ -96,7 +144,7 @@ func getBody(url string) ([]byte, error) {
 		return nil, err
 	}
 	// set crawling headers for request
-	req.Header.Set("User-Agent", "MyWebCrawler/1.0 firozt03@gmail.com")
+	req.Header.Set("User-Agent", "gowebcrawler/1.0 firozt03@gmail.com")
 
 	// make request
 	resp, err := client.Do(req)
