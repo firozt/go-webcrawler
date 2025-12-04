@@ -3,6 +3,7 @@ package ThreadSafeQueue
 import (
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"testing"
 )
 
@@ -37,33 +38,36 @@ func TestEnqueue(t *testing.T) {
 }
 
 func TestDequeue(t *testing.T) {
-	initial := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}
+	initial := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+		11, 12, 13, 14, 15, 16, 17, 18, 19, 20}
+
 	q := NewThreadSafeQueueFromList[int](initial)
-	NUM_DEQUES := len(initial) * 2 // last half should be failing
+
+	NUM_DEQUES := len(initial) * 2 // 40 dequeues
 	var wg sync.WaitGroup
 	wg.Add(NUM_DEQUES)
 
-	falseCount, trueCount := 0, 0
+	var successCount int64
+	var failCount int64
 
 	for i := 0; i < NUM_DEQUES; i++ {
-		go func(i int) {
+		go func() {
 			defer wg.Done()
-			_, isDequeud := q.Dequeue()
-
-			if isDequeud {
-				trueCount++
+			_, ok := q.Dequeue()
+			if ok {
+				atomic.AddInt64(&successCount, 1)
 			} else {
-				falseCount++
+				atomic.AddInt64(&failCount, 1)
 			}
-		}(i)
+		}()
 	}
 
 	wg.Wait()
 
-	if trueCount != falseCount {
-		t.Errorf("wanted %v got %v", trueCount, falseCount)
+	if successCount != int64(len(initial)) {
+		t.Errorf("wanted %v successful dequeues, got %v", len(initial), successCount)
 	}
-
+	if failCount != int64(len(initial)) {
+		t.Errorf("wanted %v failed dequeues, got %v", len(initial), failCount)
+	}
 }
-
-// TestWasSeen() {}
