@@ -15,15 +15,17 @@ import (
 // -------------------- PUBLIC -------------------- //
 
 // parses the url, and returns the body of the http response
-func ParseSite(url string) string {
+func ParseSite(url string) (string, error) {
+	var err error
 	body, err := getBody(url)
 	if err != nil {
-		log.Fatal("Error trying to obtain body of the url: ", err)
+		return "", err
 	}
-	return string(body)
+	return string(body), err
 }
 
 // removes the html tags such as <div> <h1> etc, returns clean text and a list of links fround within href's
+// texts, links
 func GetTextAndLinks(htmlStr string) ([]string, []string) {
 	// obtains tree strucute of the html
 	doc, err := html.Parse(strings.NewReader(htmlStr))
