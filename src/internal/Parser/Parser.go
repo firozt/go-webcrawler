@@ -51,25 +51,32 @@ func isValidURL(u string) bool {
 	return true
 }
 
-func absolutePathToUrl(u string, domain string) (string, error) {
-	// '/path/to/html/'
-	var err error
-
-	// check url is valid
-	if len(u) < 1 || !strings.HasPrefix(u, "/") {
-		return "", errors.New("URL passed is not a valid absolute path")
+func absolutePathToUrl(absPath string, curPath string) (string, error) {
+	if len(absPath) < 1 || !strings.HasPrefix(absPath, "/") {
+		return "", errors.New("absPath is not a valid absolute path (must start with /)")
 	}
 
-	return domain + "/" + u, err
+	parsed, err := url.Parse(curPath)
+	if err != nil {
+		return "", errors.New("curPath URL is not valid")
+	}
 
+	scheme := parsed.Scheme
+	host := parsed.Host
+
+	if scheme == "" || host == "" {
+		return "", errors.New("curPath must include scheme and host")
+	}
+
+	fullURL := fmt.Sprintf("%s://%s%s", parsed.Scheme, parsed.Host, absPath)
+	return fullURL, nil
 }
-
 func relativePathToUrl(relPath string, curPath string) (string, error) {
 	// ./../path/to/file
 	var err error
 
-	if len(relPath) < 1 {
-		return "", errors.New("URL passed is not a valid relative path")
+	if len(relPath) < 1 && !strings.HasPrefix(curPath, "https://") {
+		return "", errors.New("invalid relative path / url")
 	}
 
 	var pathArr []string = strings.Split(curPath, "/")
