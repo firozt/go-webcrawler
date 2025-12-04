@@ -36,6 +36,34 @@ func TestEnqueue(t *testing.T) {
 	}
 }
 
-// func TestDequeue() {}
+func TestDequeue(t *testing.T) {
+	initial := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}
+	q := NewThreadSafeQueueFromList[int](initial)
+	NUM_DEQUES := len(initial) * 2 // last half should be failing
+	var wg sync.WaitGroup
+	wg.Add(NUM_DEQUES)
+
+	falseCount, trueCount := 0, 0
+
+	for i := 0; i < NUM_DEQUES; i++ {
+		go func(i int) {
+			defer wg.Done()
+			_, isDequeud := q.Dequeue()
+
+			if isDequeud {
+				trueCount++
+			} else {
+				falseCount++
+			}
+		}(i)
+	}
+
+	wg.Wait()
+
+	if trueCount != falseCount {
+		t.Errorf("wanted %v got %v", trueCount, falseCount)
+	}
+
+}
 
 // TestWasSeen() {}

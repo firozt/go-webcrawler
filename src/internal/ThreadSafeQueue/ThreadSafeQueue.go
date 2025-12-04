@@ -18,6 +18,12 @@ func NewThreadSafeQueue[T comparable]() *ThreadSafeQueue[T] {
 		seen:     make(map[T]struct{}),
 	}
 }
+func NewThreadSafeQueueFromList[T comparable](initial []T) *ThreadSafeQueue[T] {
+	return &ThreadSafeQueue[T]{
+		elements: initial,
+		seen:     make(map[T]struct{}),
+	}
+}
 
 // adds element to back of the queue
 func (q *ThreadSafeQueue[T]) Enqueue(elem T) {
