@@ -2,6 +2,7 @@ package parser
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -63,37 +64,41 @@ func absolutePathToUrl(u string, domain string) (string, error) {
 
 }
 
-func relativePathToUrl(u string, curPath string) (string, error) {
+func relativePathToUrl(relPath string, curPath string) (string, error) {
 	// ./../path/to/file
 	var err error
 
-	if len(u) < 1 || !strings.HasPrefix(u, ".") {
+	if len(relPath) < 1 {
 		return "", errors.New("URL passed is not a valid relative path")
 	}
 
 	var pathArr []string = strings.Split(curPath, "/")
-	var relPathArr []string = strings.Split(u, "/")
+	var relPathArr []string = strings.Split(relPath, "/")
+	pathArr = pathArr[:len(pathArr)-1]
 
 	for _, action := range relPathArr {
+		fmt.Println(action)
+		fmt.Println(strings.Join(pathArr, "/"))
+
 		if action == "." {
 			// skip
 			continue
 		} else if action == ".." {
 			// invalid current path, doesnt make sense
 			if len(pathArr)-1 < 0 {
-				return "", errors.New("Invalid curPath")
+				return "", errors.New("invalid curpath")
 			}
 			pathArr = pathArr[:len(pathArr)-1]
 		} else {
 			pathArr = append(pathArr, action)
 		}
-
+		fmt.Println(strings.Join(pathArr, "/"))
 	}
-	return strings.Join(pathArr, "/"), err
-	// curpath = https://www.domain.co.uk/path/original.html
-	// curpathArr = 'https:' '' 'www.domain.co.uk' 'path' 'original.html'
-
-	// u = ./../new/path
+	res := strings.Join(pathArr, "/")
+	if !strings.Contains(pathArr[len(pathArr)-1], ".") {
+		res += "/" // trailing / for folder
+	}
+	return res, err
 
 }
 
