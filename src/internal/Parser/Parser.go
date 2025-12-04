@@ -23,7 +23,7 @@ func ParseSite(url string) string {
 	return string(body)
 }
 
-// removes the html tags such as <div> <h1> etc, returns clean text
+// removes the html tags such as <div> <h1> etc, returns clean text and a list of links fround within href's
 func GetTextAndLinks(htmlStr string) ([]string, []string) {
 	// obtains tree strucute of the html
 	doc, err := html.Parse(strings.NewReader(htmlStr))
@@ -120,9 +120,7 @@ func dfs(head *html.Node, result *[]string, links *[]string) {
 	}
 	if isLinkNode(head) {
 		href := getHref(head)
-		if isValidURL(href) {
-			*links = append(*links, href)
-		}
+		*links = append(*links, href)
 	}
 
 	// iterate over all children nodes
@@ -131,7 +129,7 @@ func dfs(head *html.Node, result *[]string, links *[]string) {
 	}
 }
 
-// gets href from a link node
+// gets link from a href node (no url validation)
 func getHref(n *html.Node) string {
 	for _, attr := range n.Attr {
 		if attr.Key == "href" {
@@ -163,6 +161,6 @@ func getBody(url string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close() // we need to close the TCP connection after were done
+	defer resp.Body.Close()
 	return io.ReadAll(resp.Body)
 }

@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/firozt/crawler/src/internal/Parser"
+	parser "github.com/firozt/crawler/src/internal/Parser"
 	// "github.com/firozt/crawler/src/internal/Repository"
 	"github.com/firozt/crawler/src/internal/ThreadSafeQueue"
 )
