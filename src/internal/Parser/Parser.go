@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 
 	"golang.org/x/net/html"
@@ -28,6 +29,7 @@ func ParseSite(url string) (string, error) {
 // texts, links
 func GetTextAndLinks(htmlStr string) ([]string, []string) {
 	// obtains tree strucute of the html
+	htmlStr = cleanText(htmlStr)
 	doc, err := html.Parse(strings.NewReader(htmlStr))
 	if err != nil {
 		log.Fatal("Error parsing html: ", err)
@@ -40,6 +42,18 @@ func GetTextAndLinks(htmlStr string) ([]string, []string) {
 }
 
 // -------------------- PRIVATE -------------------- //
+
+// removes whitespaces in htmls
+func cleanText(raw string) string {
+	// Remove leading/trailing whitespace
+	text := strings.TrimSpace(raw)
+
+	// Collapse multiple spaces/newlines/tabs into a single space
+	re := regexp.MustCompile(`\s+`)
+	text = re.ReplaceAllString(text, " ")
+
+	return text
+}
 
 // checks if a url is valid
 func isValidURL(u string) bool {

@@ -64,5 +64,5 @@ func (s *Server) StartCrawl(resp http.ResponseWriter, req *http.Request) {
 	}
 
 	resp.WriteHeader(http.StatusOK)
-	resp.Write([]byte("Crawl started"))
+	resp.Write([]byte("Crawl finished"))
 }

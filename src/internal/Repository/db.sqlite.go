@@ -13,7 +13,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-const PATH_TO_DB string = "/data/mydb.sqlite"
+const PATH_TO_DB string = "data/mydb.sqlite"
 
 func InitDB() *sql.DB {
 	// opens DB file

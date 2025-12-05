@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 
 	parser "github.com/firozt/crawler/src/internal/Parser"
 	repository "github.com/firozt/crawler/src/internal/Repository"
@@ -21,34 +22,50 @@ func NewCrawler(repo *repository.PagesRepository) *WebCrawler {
 	return &WebCrawler{repo: repo}
 }
 
+// starts the crawling proces on a url
 func (c *WebCrawler) StartCrawl(url string) error {
+	println("STARTING CRAWL")
+
 	q := TSQ.NewThreadSafeQueue[string]()
 
 	err := c.handlePage(url, q)
 	if err != nil {
 		fmt.Printf("ERROR: Could not scrape %v\nError: %v\n", url, err)
 	}
+	println("ALL CRAWLING DONE")
 
-	var wg sync.WaitGroup
-
-	var i uint8 = 0
-	for i < NUM_OF_WORKERS || q.Len() < 1 {
-		wg.Add(1)
-		go workerAction(c, q, &wg)
-	}
-
-	wg.Wait()
 	return nil
+	// var wg sync.WaitGroup
+
+	// var i uint8 = 0
+	// for i < NUM_OF_WORKERS || q.Len() < 1 {
+	// 	wg.Add(1)
+	// 	go workerAction(c, q, &wg)
+	// }
+
+	// wg.Wait()
+	// println("ALL CRAWLING DONE")
+	// return nil
 }
 
+// function that keeps parsing and saving the start of the queue
 func workerAction(c *WebCrawler, q *TSQ.ThreadSafeQueue[string], wg *sync.WaitGroup) {
-	for ok := true; ok; {
+	for i := 0; i < 2; i++ {
 		url, ok := q.Dequeue()
 		if !ok {
 			break
 		}
 		c.handlePage(url, q)
+		time.Sleep(1 * time.Second) // wait a second so i dont get banned lol
 	}
+	// for ok := true; ok; {
+	// 	url, ok := q.Dequeue()
+	// 	if !ok {
+	// 		break
+	// 	}
+	// 	c.handlePage(url, q)
+	// 	time.Sleep(1 * time.Second) // wait a second so i dont get banned lol
+	// }
 	wg.Done()
 }
 
@@ -60,7 +77,7 @@ func (c *WebCrawler) handlePage(url string, q *TSQ.ThreadSafeQueue[string]) erro
 	}
 
 	text, links := parser.GetTextAndLinks(htmlBody)
-
+	// println()
 	page := repository.Page{
 		Title:   "TODO GET TITLE",
 		URL:     url,
@@ -74,6 +91,7 @@ func (c *WebCrawler) handlePage(url string, q *TSQ.ThreadSafeQueue[string]) erro
 		links = links[:MAX_ADDED_LINKS]
 	}
 
+	// enqueue links found
 	for _, link := range links {
 		q.Enqueue(link)
 	}
