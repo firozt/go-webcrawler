@@ -1,7 +1,3 @@
-/*
-This file handles all endpoint logic, and exposing endpoints for http requests
-*/
-
 package server
 
 import (
@@ -10,27 +6,34 @@ import (
 	"io"
 	"net/http"
 
-	parser "github.com/firozt/crawler/src/internal/Parser"
+	webcrawler "github.com/firozt/crawler/src/internal/WebCrawler"
 )
 
-// initialise the http web server
-func InitWebServer(HOSTNAME string, PORT string) {
-	// initialise new server mux to handle traffic flow
-	mux := http.NewServeMux()
-
-	// ============= ENDPOINT MAPPINGS ============= //
-
-	mux.HandleFunc("/", HandleRoot)
-	mux.HandleFunc("/api/v1/crawl", StartCrawl)
-
-	// ============================================= //
-
-	fmt.Printf("Server listening to %v:%v\n", HOSTNAME, PORT)
-	http.ListenAndServe(fmt.Sprintf("%v:%v", HOSTNAME, PORT), mux)
+type Server struct {
+	hostname string
+	port     string
+	crawler  *webcrawler.WebCrawler
 }
 
-func HandleRoot(resp http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(resp, "Hello Word")
+func NewServer(crawler *webcrawler.WebCrawler, hostname string, port string) *Server {
+	return &Server{
+		crawler:  crawler,
+		hostname: hostname,
+		port:     port,
+	}
+}
+
+func (s *Server) Run() {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", s.HandleRoot)
+	mux.HandleFunc("/api/v1/crawl", s.StartCrawl)
+
+	fmt.Printf("Server listening to %v:%v\n", s.hostname, s.port)
+	http.ListenAndServe(fmt.Sprintf("%v:%v", s.hostname, s.port), mux)
+}
+
+func (s *Server) HandleRoot(resp http.ResponseWriter, req *http.Request) {
+	fmt.Fprintf(resp, "Hello World")
 }
 
 type StartCrawlBody struct {
@@ -39,20 +42,27 @@ type StartCrawlBody struct {
 	FollowExternal bool   `json:"followExternal"`
 }
 
-func StartCrawl(resp http.ResponseWriter, req *http.Request) {
-	// obtain config from body of request
+func (s *Server) StartCrawl(resp http.ResponseWriter, req *http.Request) {
+	// read body config
 	body, err := io.ReadAll(req.Body)
 	defer req.Body.Close()
 	if err != nil {
-		http.Error(resp, "failed to read body", http.StatusBadRequest)
+		http.Error(resp, "failed to read body of request", http.StatusBadRequest)
 		return
 	}
+
 	var config StartCrawlBody
 	if err := json.Unmarshal(body, &config); err != nil {
 		http.Error(resp, "invalid json", http.StatusBadRequest)
 		return
 	}
 
-	var htmlResponse string = parser.ParseSite(config.URL)
+	err = s.crawler.StartCrawl(config.URL)
+	if err != nil {
+		http.Error(resp, fmt.Sprintf("crawl failed: %v", err), http.StatusInternalServerError)
+		return
+	}
 
+	resp.WriteHeader(http.StatusOK)
+	resp.Write([]byte("Crawl started"))
 }
