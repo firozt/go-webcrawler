@@ -1,4 +1,4 @@
-# Functioning Webcrawler And Indexer in Go
+# Webcrawler, Indexer and WebServer in Go
 ## Functionality
 - Crawls a domain given a seed (initial url)
 - Search through keywords and recieve url
