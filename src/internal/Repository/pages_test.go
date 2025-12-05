@@ -70,7 +70,7 @@ func TestSearchPageFTS5(t *testing.T) {
 	}
 
 	// Test 1: match should return 1 result
-	res := repo.SearchPages("some")
+	res := repo.SearchPages("some", 10)
 	if len(res) != 1 {
 		t.Errorf("expected 1 result, got %d", len(res))
 	} else {
@@ -78,7 +78,7 @@ func TestSearchPageFTS5(t *testing.T) {
 	}
 
 	// Test 2: no match should return 0 results
-	res = repo.SearchPages("this should be empty")
+	res = repo.SearchPages("this should be empty", 10)
 	if len(res) != 0 {
 		t.Errorf("expected 0 results, got %d", len(res))
 	} else {

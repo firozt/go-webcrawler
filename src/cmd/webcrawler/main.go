@@ -23,9 +23,10 @@ func main() {
 	defer db.Close()
 	pagesRepo := repository.NewPagesRepository(db)                                           // creates pagesRepo API using DB
 	webcrawler := webcrawler.NewCrawler(pagesRepo, MAX_ADDED_LINKS_PER_PAGE, NUM_OF_WORKERS) // crawls sites and saves to DB
-	webcrawler.StartCrawl("https://books.toscrape.com/index.html")
-	if false {
+	if true {
 		server := server.NewServer(webcrawler, HOSTNAME, PORT) // creates webserver instance
 		server.Run()                                           // runs server
+	} else {
+		webcrawler.StartCrawl("https://books.toscrape.com/index.html")
 	}
 }

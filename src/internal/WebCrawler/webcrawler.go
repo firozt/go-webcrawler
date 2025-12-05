@@ -114,3 +114,9 @@ func (c *WebCrawler) handlePage(url string) ([]string, error) {
 
 	return links, err
 }
+
+// simple passthrough, sqlite does the heavy lifting here
+func (c *WebCrawler) SearchCrawled(phrase string, limit int) []repository.Page {
+	pages := c.repo.SearchPages(phrase, limit)
+	return pages
+}
