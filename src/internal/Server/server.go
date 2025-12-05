@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	webcrawler "github.com/firozt/crawler/src/internal/WebCrawler"
 )
@@ -23,10 +24,20 @@ func NewServer(crawler *webcrawler.WebCrawler, hostname string, port string) *Se
 	}
 }
 
+// middleware wrapper to handle endpoint logging on each request made,
+// returns handlerfunction (endpoint function)
+func (s *Server) loggingMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Printf("[%s] %s %s\n", time.Now().Format(time.RFC3339), r.Method, r.URL.Path)
+		next(w, r)
+	}
+}
+
+// function to start the server, running on given host and port
 func (s *Server) Run() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", s.HandleRoot)
-	mux.HandleFunc("/api/v1/crawl", s.StartCrawl)
+	mux.HandleFunc("/", s.loggingMiddleware(s.HandleRoot))
+	mux.HandleFunc("/api/v1/crawl", s.loggingMiddleware(s.StartCrawl))
 
 	fmt.Printf("Server listening to %v:%v\n", s.hostname, s.port)
 	http.ListenAndServe(fmt.Sprintf("%v:%v", s.hostname, s.port), mux)
@@ -36,6 +47,7 @@ func (s *Server) HandleRoot(resp http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(resp, "Hello World")
 }
 
+// ==================== ENDPOINTS ==================== //
 type StartCrawlBody struct {
 	URL            string `json:"url"`
 	MaxDepth       uint8  `json:"maxDepth"`

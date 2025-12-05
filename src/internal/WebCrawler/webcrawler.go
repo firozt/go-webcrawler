@@ -12,7 +12,7 @@ import (
 )
 
 var MAX_ADDED_LINKS uint8 = 5
-var NUM_OF_WORKERS uint8 = 1
+var NUM_OF_WORKERS uint8 = 3
 
 type WebCrawler struct {
 	repo *repository.PagesRepository
