@@ -28,12 +28,12 @@
 ![Diagram](images/diagram.png)
 <br>
 The diagram above shows the system diagram of the webcrawler, It checks a thread safe link queue and, requests, parses, traverses the link. Once this process is complete it then extracts the page text content and links contained within the page. The content is saved to a SQLite database to be queried by endpoints whilst the other links are checked to see if it has been visited already / exist within link queue and either skips it or enqueues it to the link queue. This process is repeated until a fixed number of pages are crawled
-## Endpoints
 
 ### Package Structure
 ![Diagram](images/package-diagram.png)
 <br>
 The diagram above shows the general package hierarchy and structure for this application. The server package (controller) exposes the endpoints, and uses the webcrawler package to handle webcrawling logic, which that too delegates parsing, thread safety and data store to their own packages. The unit tests for each repository is located in the same directory labeled *_test.go 
+## Endpoints
 
 <details>
 <summary>POST /api/v1/crawl</summary>
