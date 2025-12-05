@@ -26,12 +26,15 @@ func NewThreadSafeQueueFromList[T comparable](initial []T) *ThreadSafeQueue[T] {
 }
 
 // adds element to back of the queue
-func (q *ThreadSafeQueue[T]) Enqueue(elem T) {
+func (q *ThreadSafeQueue[T]) Enqueue(elem T) bool {
+	if q.WasSeen(elem) {
+		return false
+	}
 	q.lock.Lock()
 	defer q.lock.Unlock()
-
 	q.elements = append(q.elements, elem)
 	q.seen[elem] = struct{}{}
+	return true
 }
 
 // removes element from the front of the queue
@@ -65,6 +68,10 @@ func (q *ThreadSafeQueue[T]) Len() int {
 	return len(q.elements)
 }
 
-func (q *ThreadSafeQueue[t]) All() {
+func (q *ThreadSafeQueue[T]) All() {
 	fmt.Println(len(q.seen))
+}
+
+func (q *ThreadSafeQueue[T]) GetAllElements() []T {
+	return q.elements
 }

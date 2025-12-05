@@ -29,7 +29,7 @@ func ParseSite(url string) (string, error) {
 // texts, links
 func GetTextAndLinks(htmlStr string) ([]string, []string) {
 	// obtains tree strucute of the html
-	htmlStr = cleanText(htmlStr)
+	htmlStr = CleanText(htmlStr)
 	doc, err := html.Parse(strings.NewReader(htmlStr))
 	if err != nil {
 		log.Fatal("Error parsing html: ", err)
@@ -41,10 +41,8 @@ func GetTextAndLinks(htmlStr string) ([]string, []string) {
 	return text, links
 }
 
-// -------------------- PRIVATE -------------------- //
-
 // removes whitespaces in htmls
-func cleanText(raw string) string {
+func CleanText(raw string) string {
 	// Remove leading/trailing whitespace
 	text := strings.TrimSpace(raw)
 
@@ -53,7 +51,39 @@ func cleanText(raw string) string {
 	text = re.ReplaceAllString(text, " ")
 
 	return text
+
 }
+
+func ValidateLinks(links []string, curUrl string) []string {
+	valids := []string{}
+	for _, link := range links {
+
+		// see if its a https link
+		if isValidURL(link) {
+			valids = append(valids, link)
+			continue
+		}
+
+		// see if its an absolute path
+		valid_link, ok := absolutePathToUrl(link, curUrl)
+
+		if ok == nil {
+			valids = append(valids, valid_link)
+			continue
+		}
+
+		// see if its a relative path
+		valid_link, ok = relativePathToUrl(link, curUrl)
+		if ok == nil {
+			valids = append(valids, valid_link)
+			continue
+		}
+
+	}
+	return valids
+}
+
+// -------------------- PRIVATE -------------------- //
 
 // checks if a url is valid
 func isValidURL(u string) bool {
@@ -100,8 +130,6 @@ func relativePathToUrl(relPath string, curPath string) (string, error) {
 	pathArr = pathArr[:len(pathArr)-1]
 
 	for _, action := range relPathArr {
-		fmt.Println(action)
-		fmt.Println(strings.Join(pathArr, "/"))
 
 		if action == "." {
 			// skip
@@ -115,7 +143,6 @@ func relativePathToUrl(relPath string, curPath string) (string, error) {
 		} else {
 			pathArr = append(pathArr, action)
 		}
-		fmt.Println(strings.Join(pathArr, "/"))
 	}
 	res := strings.Join(pathArr, "/")
 	if !strings.Contains(pathArr[len(pathArr)-1], ".") {

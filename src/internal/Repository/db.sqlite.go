@@ -32,6 +32,11 @@ func InitDB() *sql.DB {
             tokenize='porter'
         )
     `)
+
+	_, _ = db.Exec(`
+		DELETE from pages;
+	`)
+
 	if err != nil {
 		log.Fatal(err)
 	}
