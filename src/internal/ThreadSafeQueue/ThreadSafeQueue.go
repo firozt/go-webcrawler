@@ -3,19 +3,22 @@ package ThreadSafeQueue
 import (
 	"fmt"
 	"sync"
+	"sync/atomic"
 )
 
 type ThreadSafeQueue[T comparable] struct {
-	elements []T
-	seen     map[T]struct{}
-	lock     sync.Mutex
+	elements  []T
+	seen      map[T]struct{}
+	lock      sync.Mutex
+	processed atomic.Int64
 }
 
 // creates a new queue
 func NewThreadSafeQueue[T comparable]() *ThreadSafeQueue[T] {
 	return &ThreadSafeQueue[T]{
-		elements: make([]T, 0),
-		seen:     make(map[T]struct{}),
+		elements:  make([]T, 0),
+		seen:      make(map[T]struct{}),
+		processed: atomic.Int64{},
 	}
 }
 func NewThreadSafeQueueFromList[T comparable](initial []T) *ThreadSafeQueue[T] {
@@ -33,7 +36,7 @@ func (q *ThreadSafeQueue[T]) Enqueue(elem T) bool {
 	q.lock.Lock()
 	defer q.lock.Unlock()
 	q.elements = append(q.elements, elem)
-	q.seen[elem] = struct{}{}
+	q.seen[elem] = struct{}{} // add to seen (points to empty obj)
 	return true
 }
 
@@ -41,12 +44,12 @@ func (q *ThreadSafeQueue[T]) Enqueue(elem T) bool {
 func (q *ThreadSafeQueue[T]) Dequeue() (T, bool) {
 	q.lock.Lock()
 	defer q.lock.Unlock()
-
 	if len(q.elements) == 0 {
 		var zero T
 		return zero, false
 	}
 
+	q.IncrementProcessed()
 	elem := q.elements[0]
 	q.elements = q.elements[1:]
 	return elem, true
@@ -74,4 +77,12 @@ func (q *ThreadSafeQueue[T]) All() {
 
 func (q *ThreadSafeQueue[T]) GetAllElements() []T {
 	return q.elements
+}
+
+func (q *ThreadSafeQueue[T]) IncrementProcessed() {
+	q.processed.Add(1)
+}
+
+func (q *ThreadSafeQueue[T]) GetProcessed() int {
+	return int(q.processed.Load())
 }

@@ -11,15 +11,18 @@ import (
 	TSQ "github.com/firozt/crawler/src/internal/ThreadSafeQueue"
 )
 
-var MAX_ADDED_LINKS uint8 = 5
-var NUM_OF_WORKERS uint8 = 3
-
 type WebCrawler struct {
-	repo *repository.PagesRepository
+	repo                     *repository.PagesRepository
+	MAX_ADDED_LINKS_PER_PAGE uint8
+	NUM_OF_WORKERS           uint8
 }
 
-func NewCrawler(repo *repository.PagesRepository) *WebCrawler {
-	return &WebCrawler{repo: repo}
+func NewCrawler(repo *repository.PagesRepository, MAX_ADDED_LINKS_PER_PAGE uint8, NUM_OF_WORKERS uint8) *WebCrawler {
+	return &WebCrawler{
+		repo:                     repo,
+		MAX_ADDED_LINKS_PER_PAGE: MAX_ADDED_LINKS_PER_PAGE,
+		NUM_OF_WORKERS:           NUM_OF_WORKERS,
+	}
 }
 
 // starts the crawling proces on a url
@@ -30,14 +33,19 @@ func (c *WebCrawler) StartCrawl(url string) error {
 	//TEMP
 	q.Enqueue(url)
 	q.Dequeue()
-	err := c.handlePage(url, q)
+	links, err := c.handlePage(url)
+
 	if err != nil {
 		fmt.Printf("ERROR: Could not scrape %v\nError: %v\n", url, err)
+	}
+
+	for _, link := range links {
+		q.Enqueue(link)
 	}
 	var wg sync.WaitGroup
 
 	var i uint8 = 0
-	for i < NUM_OF_WORKERS || q.Len() < 1 {
+	for i < c.NUM_OF_WORKERS || q.Len() < 1 {
 		wg.Add(1)
 		go workerAction(c, q, &wg)
 		i++
@@ -57,7 +65,17 @@ func workerAction(c *WebCrawler, q *TSQ.ThreadSafeQueue[string], wg *sync.WaitGr
 		if !ok {
 			break
 		}
-		c.handlePage(url, q)
+		links, err := c.handlePage(url)
+		if err != nil {
+			continue
+		}
+		unseenLinks := 0
+		// keep adding from links until we enq N unseen links or we reached the end of the link list
+		for i := 0; unseenLinks < int(c.MAX_ADDED_LINKS_PER_PAGE) && i >= len(links); i++ {
+			if q.Enqueue(links[i]) {
+				unseenLinks++
+			}
+		}
 
 		time.Sleep(1 * time.Second) // wait a second so i dont get banned lol
 	}
@@ -72,10 +90,11 @@ func workerAction(c *WebCrawler, q *TSQ.ThreadSafeQueue[string], wg *sync.WaitGr
 	wg.Done()
 }
 
-func (c *WebCrawler) handlePage(url string, q *TSQ.ThreadSafeQueue[string]) error {
+func (c *WebCrawler) handlePage(url string) ([]string, error) {
 	htmlBody, err := parser.ParseSite(url)
+	var links []string
 	if err != nil {
-		return err
+		return links, err
 	}
 
 	text, links := parser.GetTextAndLinks(htmlBody)
@@ -88,18 +107,9 @@ func (c *WebCrawler) handlePage(url string, q *TSQ.ThreadSafeQueue[string]) erro
 	}
 	// save to database
 	if err := c.repo.InsertPage(page); err != nil {
-		return err
+		return links, err
 	}
 	links = parser.ValidateLinks(links, url)
-	added := 0
-	for _, link := range links {
-		if added > int(MAX_ADDED_LINKS) {
-			break
-		}
-		if q.Enqueue(link) {
-			added++
-		}
-	}
 
-	return nil
+	return links, err
 }
