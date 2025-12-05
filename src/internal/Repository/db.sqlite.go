@@ -14,17 +14,10 @@ import (
 )
 
 const PATH_TO_DB string = "data/mydb.sqlite"
-const PATH_TO_TEST_DB string = "./testdb.sqlite"
 
 func InitDB(testMode bool) *sql.DB {
 	// opens DB file
-	var path string
-	if testMode {
-		path = PATH_TO_TEST_DB
-	} else {
-		path = PATH_TO_DB
-	}
-	db, err := sql.Open("sqlite3", path)
+	db, err := sql.Open("sqlite3", PATH_TO_DB)
 	if err != nil {
 		log.Fatal(err)
 	}
