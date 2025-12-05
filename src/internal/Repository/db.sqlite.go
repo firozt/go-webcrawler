@@ -15,7 +15,7 @@ import (
 
 const PATH_TO_DB string = "data/mydb.sqlite"
 
-func InitDB(testMode bool) *sql.DB {
+func InitDB() *sql.DB {
 	// opens DB file
 	db, err := sql.Open("sqlite3", PATH_TO_DB)
 	if err != nil {

@@ -19,7 +19,7 @@ func main() {
 	var NUM_OF_WORKERS uint8 = 5
 
 	// starting everything
-	db := repository.InitDB(false) // creates db conn and obj
+	db := repository.InitDB() // creates db conn and obj
 	defer db.Close()
 	pagesRepo := repository.NewPagesRepository(db)                                           // creates pagesRepo API using DB
 	webcrawler := webcrawler.NewCrawler(pagesRepo, MAX_ADDED_LINKS_PER_PAGE, NUM_OF_WORKERS) // crawls sites and saves to DB
