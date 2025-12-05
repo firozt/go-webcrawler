@@ -69,6 +69,7 @@ func workerAction(c *WebCrawler, q *TSQ.ThreadSafeQueue[string], wg *sync.WaitGr
 		if err != nil {
 			continue
 		}
+
 		unseenLinks := 0
 		// keep adding from links until we enq N unseen links or we reached the end of the link list
 		for i := 0; unseenLinks < int(c.MAX_ADDED_LINKS_PER_PAGE) && i >= len(links); i++ {

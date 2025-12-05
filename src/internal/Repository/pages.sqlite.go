@@ -37,21 +37,22 @@ func (p PagesRepository) InsertPage(page Page) error {
 // searches for phrase from DB
 func (p PagesRepository) SearchPages(phrase string) []Page {
 	var res []Page
+
 	rows, err := p.db.Query(`
-		SELECT * FROM pages
-		WHERE pages MATCH %s
+		SELECT url, title, content
+		FROM pages
+		WHERE pages MATCH ?
 		LIMIT 10
-	`)
+	`, phrase)
 	if err != nil {
+		log.Fatal("Failed trying to obtain pages, SQL Error:", err)
 		return res
 	}
-
 	defer rows.Close()
 
 	for rows.Next() {
 		var url, title, content string
-		err := rows.Scan(&url, &title, &content)
-		if err != nil {
+		if err := rows.Scan(&url, &title, &content); err != nil {
 			log.Fatal(err)
 		}
 		res = append(res, Page{
