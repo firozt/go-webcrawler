@@ -43,11 +43,12 @@ func (s *Server) Run() {
 	http.ListenAndServe(fmt.Sprintf("%v:%v", s.hostname, s.port), mux)
 }
 
+// ==================== ENDPOINTS ==================== //
+
 func (s *Server) HandleRoot(resp http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(resp, "Hello World")
 }
 
-// ==================== ENDPOINTS ==================== //
 type StartCrawlBody struct {
 	URL            string `json:"url"`
 	MaxDepth       uint8  `json:"maxDepth"`
