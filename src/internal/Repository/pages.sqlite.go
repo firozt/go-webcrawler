@@ -6,6 +6,7 @@ package repository
 
 import (
 	"database/sql"
+	"log"
 	"time"
 )
 
@@ -31,4 +32,34 @@ func (p PagesRepository) InsertPage(page Page) error {
         VALUES (?, ?, ?, ?)
     `, page.URL, page.Title, page.Content, time.Now().Format("2006-01-02 15:04:05"))
 	return err
+}
+
+// searches for phrase from DB
+func (p PagesRepository) SearchPages(phrase string) []Page {
+	var res []Page
+	rows, err := p.db.Query(`
+		SELECT * FROM pages
+		WHERE pages MATCH %s
+		LIMIT 10
+	`)
+	if err != nil {
+		return res
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var url, title, content string
+		err := rows.Scan(&url, &title, &content)
+		if err != nil {
+			log.Fatal(err)
+		}
+		res = append(res, Page{
+			URL:     url,
+			Title:   title,
+			Content: content,
+		})
+	}
+
+	return res
 }
