@@ -159,7 +159,7 @@ func dfs(head *html.Node, result *[]string, links *[]string) {
 	}
 	// check node type
 	if head.Type == html.TextNode {
-		*result = append(*result, head.Data)
+		*result = append(*result, strings.ToLower(head.Data))
 	}
 	if isLinkNode(head) {
 		href := getHref(head)

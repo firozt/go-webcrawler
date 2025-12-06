@@ -68,22 +68,22 @@ func TestDFS(t *testing.T) {
 		{
 			`<div>Hello <a href="https://example.com">world</a></div>`,
 			[]string{"https://example.com"},
-			[]string{"Hello ", "world"},
+			[]string{"hello ", "world"},
 		},
 		{
 			`<div>Start <div>Nested <a href="https://nested.com/page">link</a></div> End</div>`,
 			[]string{"https://nested.com/page"},
-			[]string{"Start ", "Nested ", "link", " End"},
+			[]string{"start ", "nested ", "link", " end"},
 		},
 		{
 			`<p><a href="https://one.com">One</a> and <a href="https://two.com">Two</a></p>`,
 			[]string{"https://one.com", "https://two.com"},
-			[]string{"One", " and ", "Two"},
+			[]string{"one", " and ", "two"},
 		},
 		{
 			`<span>Just some text without links.</span>`,
 			[]string{},
-			[]string{"Just some text without links."},
+			[]string{"just some text without links."},
 		},
 	}
 	for i, testcase := range testCases {
