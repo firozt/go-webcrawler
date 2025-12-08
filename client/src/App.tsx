@@ -58,7 +58,7 @@ function App() {
         <h1>Domain Search</h1>
         <p>
           A tool crawls a website and indexes all its pages. It allows you to quickly search for keywords across the site’s content.
-          Documentation for the API and project can be found <a href=''><span>here</span></a>
+          Documentation for the API and project can be found <a href='https://github.com/firozt/go-webcrawler/blob/main/README.md'><span>here</span></a>
         </p>
         <div 
           style={{
