@@ -37,7 +37,7 @@ function App() {
           target='_BLANK'>
             <img
             width={"40px"}
-            style={{cursor:"pointer"}} id='github' src={isLightMode ? '../public/lightmode-github.png' : '../public/darkmode-github.png'}
+            style={{cursor:"pointer"}} id='github' src={isLightMode ? '/lightmode-github.png' : '/darkmode-github.png'}
             />
           </a>
           <p>firozt/DOMAIN SEARCH</p>
@@ -50,7 +50,7 @@ function App() {
           id='mode' 
           width={40}
           height={40}
-          src={isLightMode ? "../public/darkmode.png" : "../public/lightmode.svg"}
+          src={isLightMode ? "/darkmode.png" : "/lightmode.svg"}
           />
         </div>
       </div>
