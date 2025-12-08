@@ -64,8 +64,9 @@
 }
 
 .error p {
-  margin: 0 auto;
+  margin: 0 !important;
   text-align: center;
+  padding: 7px;
 }
 
 /* Navbar */
