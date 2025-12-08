@@ -7,6 +7,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+// starts in memory DB for testing
 func setupTestDB(t *testing.T) *sql.DB {
 	db, err := sql.Open("sqlite3", ":memory:")
 	if err != nil {
@@ -57,6 +58,7 @@ func TestSearchPageFTS5(t *testing.T) {
 	db := setupTestDB(t)
 	defer db.Close()
 
+	// insert example
 	repo := NewPagesRepository(db)
 	page := Page{
 		URL:     "http://example.com",
