@@ -15,7 +15,7 @@ function App() {
     setIsLightMode(checkDarkModeStorage())
   },[])
 
-  // 
+  // for updating lightmode
   useEffect(() => {
     const bg = isLightMode ? "white" : "#242424";
     document.documentElement.style.setProperty("--background-color", bg);
