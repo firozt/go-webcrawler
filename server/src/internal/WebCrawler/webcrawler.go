@@ -98,11 +98,11 @@ func (c *WebCrawler) handlePage(url string) ([]string, error) {
 		return links, err
 	}
 
-	text, links := parser.GetTextAndLinks(htmlBody)
+	text, links, title := parser.GetTextAndLinks(htmlBody)
 
 	cleaned_text := parser.CleanText(strings.Join(text, " "))
 	page := repository.Page{
-		Title:   "TODO GET TITLE",
+		Title:   title,
 		URL:     url,
 		Content: cleaned_text,
 	}

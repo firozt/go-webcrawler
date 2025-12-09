@@ -27,7 +27,7 @@ func ParseSite(url string) (string, error) {
 
 // removes the html tags such as <div> <h1> etc, returns clean text and a list of links fround within href's
 // texts, links
-func GetTextAndLinks(htmlStr string) ([]string, []string) {
+func GetTextAndLinks(htmlStr string) ([]string, []string, string) {
 	// obtains tree strucute of the html
 	htmlStr = CleanText(htmlStr)
 	doc, err := html.Parse(strings.NewReader(htmlStr))
@@ -37,8 +37,9 @@ func GetTextAndLinks(htmlStr string) ([]string, []string) {
 
 	// perform DFS to obtain all text nodes
 	text, links := []string{}, []string{}
-	dfs(doc, &text, &links)
-	return text, links
+	var title string
+	dfs(doc, &text, &links, &title)
+	return text, links, title
 }
 
 // removes whitespaces in htmls
@@ -153,11 +154,15 @@ func relativePathToUrl(relPath string, curPath string) (string, error) {
 }
 
 // general purpose dfs that parses through html nodes looking for queried tag values
-func dfs(head *html.Node, result *[]string, links *[]string) {
+func dfs(head *html.Node, result *[]string, links *[]string, title *string) {
 	if head == nil {
 		return
 	}
 	// check node type
+	if head.Type == html.ElementNode && head.Data == "title" && head.FirstChild != nil {
+		*title = head.FirstChild.Data
+	}
+
 	if head.Type == html.TextNode {
 		*result = append(*result, strings.ToLower(head.Data))
 	}
@@ -168,7 +173,7 @@ func dfs(head *html.Node, result *[]string, links *[]string) {
 
 	// iterate over all children nodes
 	for child := head.FirstChild; child != nil; child = child.NextSibling {
-		dfs(child, result, links)
+		dfs(child, result, links, title)
 	}
 }
 

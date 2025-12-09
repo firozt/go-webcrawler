@@ -16,9 +16,9 @@ type PagesRepository struct {
 
 // struct to represent a row in the pages table
 type Page struct {
-	Content string
-	URL     string
-	Title   string
+	Content string `json:"content"`
+	URL     string `json:"url"`
+	Title   string `json:"title"`
 }
 
 // constructor for this object given a pre existing DB object

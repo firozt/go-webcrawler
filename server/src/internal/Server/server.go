@@ -11,6 +11,11 @@ import (
 	webcrawler "github.com/firozt/crawler/src/internal/WebCrawler"
 )
 
+var allowedOrigins map[string]bool = map[string]bool{
+	"http://localhost:5173":                     true, // FOR DEV ONLY
+	"https://www.go-webcrawler.ramizabdulla.me": true,
+}
+
 type Server struct {
 	hostname string
 	port     string
@@ -26,16 +31,45 @@ func NewServer(crawler *webcrawler.WebCrawler, hostname string, port string) *Se
 }
 
 // Middleware wrapper to handle endpoint logging on each request made,
+// also handles CORS header checks
 // returns handlerfunction (endpoint function)
 func (s *Server) MiddleWare(method string, next http.HandlerFunc) http.HandlerFunc {
-
 	return func(w http.ResponseWriter, r *http.Request) {
+		// log request
+		fmt.Printf("[%s] %s %s\n", time.Now().Format(time.RFC3339), r.Method, r.URL.Path)
+
+		// get origin of request and check if its whitelisted
+		originHeader := r.Header.Get("Origin")
+
+		// if there is no Origin header → request is not from browser → allow entirely, postman curl etc.
+		if originHeader == "" {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			next(w, r)
+			return
+		}
+
+		if !allowedOrigins[originHeader] {
+			http.Error(w, fmt.Sprintf("origin %s not allowed", originHeader), http.StatusMethodNotAllowed)
+			fmt.Printf("Refused API request from unauthorized origin: %s\n", originHeader)
+			return
+		}
+
+		//  set access control headers
+		w.Header().Set("Access-Control-Allow-Origin", originHeader)
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
 		if r.Method != method {
-			fmt.Printf("Invalid method type expected %v got %v", method, r.Method)
+			fmt.Printf("Invalid method type, expected %v got %v\n", method, r.Method)
 			http.Error(w, fmt.Sprintf("method %s not allowed", r.Method), http.StatusMethodNotAllowed)
 			return
 		}
-		fmt.Printf("[%s] %s %s\n", time.Now().Format(time.RFC3339), r.Method, r.URL.Path)
+
 		next(w, r)
 	}
 }
@@ -57,13 +91,13 @@ func (s *Server) HandleRoot(resp http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(resp, "Hello World")
 }
 
-type StartCrawlBody struct {
-	URL            string `json:"url"`
-	MaxDepth       uint8  `json:"maxDepth"`
-	FollowExternal bool   `json:"followExternal"`
-}
-
 func (s *Server) StartCrawl(resp http.ResponseWriter, req *http.Request) {
+	type StartCrawlBody struct {
+		URL            string `json:"url"`
+		MaxDepth       uint8  `json:"maxDepth"`
+		FollowExternal bool   `json:"followExternal"`
+	}
+
 	// read body config
 	body, err := io.ReadAll(req.Body)
 	defer req.Body.Close()

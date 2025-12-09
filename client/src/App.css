@@ -1,6 +1,5 @@
 /* Light mode */
 .lightmode {
-  background-color: #f5f5f5;
   color: #222;
 }
 
@@ -9,24 +8,29 @@
 }
 
 .lightmode a {
-  color: #616161;
+  color: #616161 !important;
 }
 
 .lightmode .initial-input-page p {
-  color: #444;
+  color: #444 !important;
 }
 
 .lightmode .search {
-  background-color: #fff;
+  background-color: #fff !important;
 }
 
 .lightmode .search input,
-.lightmode .search button {
+.lightmode .search button ,
+.lightmode .search-page button
+{
   color: #222;
 }
 
-.lightmode .search button {
-  background-color: #e0e0e0;
+
+.lightmode .search button ,
+.lightmode .search-page button
+{
+  background-color: #e0e0e0 !important;
 }
 
 .lightmode .search button:hover {
@@ -71,3 +75,37 @@ span {
   text-align: center;
   color: rgba(255, 255, 255, 0.625);
 }
+
+
+/* search page */
+
+.search-page {
+
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
+  align-items:flex-start;
+  width: 100%;
+  gap: 10px;
+  z-index: 1;
+  margin: auto;
+  margin-top: 2%;
+
+}
+
+.search-page  button{
+  background-color: white;
+  color: black;
+  padding: 5px;
+  padding-left: 15px;
+  padding-right: 15px;
+  border-radius: 10px;
+  border: 1px solid black;
+}
+
+.search-page  button:hover{
+  background-color: black;
+  color: white;
+  transition: all .15s;
+}
+

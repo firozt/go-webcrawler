@@ -94,8 +94,9 @@ func TestDFS(t *testing.T) {
 		}
 
 		link, content := []string{}, []string{}
+		var title string
 		t.Run(fmt.Sprintf("case_%d", i), func(t *testing.T) {
-			dfs(doc, &content, &link)
+			dfs(doc, &content, &link, &title)
 
 			if !reflect.DeepEqual(link, testcase.expectedLinks) {
 				t.Errorf("wanted %v got %v", testcase.expectedLinks, link)
