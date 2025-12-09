@@ -25,12 +25,32 @@ func NewCrawler(repo *repository.PagesRepository, MAX_ADDED_LINKS_PER_PAGE uint8
 	}
 }
 
+func GetDomain(url string) string {
+	// remove http:// or https://
+	if strings.HasPrefix(url, "http://") {
+		url = url[len("http://"):]
+	} else if strings.HasPrefix(url, "https://") {
+		url = url[len("https://"):]
+	} else {
+		return "" // not http
+	}
+	// remove path
+	if idx := strings.Index(url, "/"); idx != -1 {
+		url = url[:idx]
+	}
+
+	// Remove port if present
+	if idx := strings.Index(url, ":"); idx != -1 {
+		url = url[:idx]
+	}
+
+	return url
+}
+
 // starts the crawling proces on a url
 func (c *WebCrawler) StartCrawl(url string) error {
 	println("STARTING CRAWL")
-
 	q := TSQ.NewThreadSafeQueue[string]()
-	//TEMP
 	q.Enqueue(url)
 	q.Dequeue()
 	links, err := c.handlePage(url)
@@ -72,7 +92,7 @@ func workerAction(c *WebCrawler, q *TSQ.ThreadSafeQueue[string], wg *sync.WaitGr
 
 		unseenLinks := 0
 		// keep adding from links until we enq N unseen links or we reached the end of the link list
-		for i := 0; unseenLinks < int(c.MAX_ADDED_LINKS_PER_PAGE) && i >= len(links); i++ {
+		for i := 0; unseenLinks < int(c.MAX_ADDED_LINKS_PER_PAGE) && i < len(links); i++ {
 			if q.Enqueue(links[i]) {
 				unseenLinks++
 			}
