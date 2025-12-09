@@ -126,7 +126,7 @@ func isValidURL(u string) bool {
 }
 
 func absolutePathToUrl(absPath string, curPath string) (string, error) {
-	if len(absPath) < 1 || !strings.HasPrefix(absPath, "/") {
+	if len(absPath) < 1 {
 		return "", errors.New("absPath is not a valid absolute path (must start with /)")
 	}
 
@@ -141,8 +141,16 @@ func absolutePathToUrl(absPath string, curPath string) (string, error) {
 	if scheme == "" || host == "" {
 		return "", errors.New("curPath must include scheme and host")
 	}
+	addTrailingSlash := false
+	if string(absPath[0]) != "/" && string(curPath[len(curPath)-1]) != "/" {
+		addTrailingSlash = true
+	}
 
-	fullURL := fmt.Sprintf("%s://%s%s", parsed.Scheme, parsed.Host, absPath)
+	fullURL := fmt.Sprintf("%s://%s", parsed.Scheme, parsed.Host)
+	if addTrailingSlash {
+		fullURL += "/"
+	}
+	fullURL += absPath
 	return fullURL, nil
 }
 func relativePathToUrl(relPath string, curPath string) (string, error) {

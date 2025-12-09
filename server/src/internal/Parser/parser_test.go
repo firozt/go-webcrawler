@@ -38,6 +38,7 @@ func TestAbsolutePathToUrl(t *testing.T) {
 		{"/images/logo.png", "https://example.com/path/to/page.html", "https://example.com/images/logo.png"},
 		{"/about/us.html", "https://example.com/path/to/page.html", "https://example.com/about/us.html"},
 		{"/", "https://example.com/path/to/page.html", "https://example.com/"},
+		{"B-B0TheDeliveryBot", "https://malgow.net", "https://malgow.net/B-B0TheDeliveryBot"},
 
 		// Root-relative edge case
 		{"/docs/", "https://example.com/path/to/page.html", "https://example.com/docs/"},
