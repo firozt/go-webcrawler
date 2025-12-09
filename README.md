@@ -1,14 +1,13 @@
 # Table of Contents
 1. [Introduction](#webcrawler-indexer-and-webserver-in-go)
 2. [Functionality](#functionality)
-3. [Topics Covered](#topics-covered)
-4. [Tech Stack](#tech-stack)
+3. [Tech Stack](#tech-stack)
    - [Frontend](#frontend-hosted-on-vercel)
    - [Backend](#backend-all-self-hosted)
-5. [Implementation](#implementation)
+4. [Implementation](#implementation)
    - [System Diagram of the Webcrawler](#system-diagram-of-the-webcrawler)
    - [Package Structure](#package-structure)
-6. [Endpoints](#endpoints)
+5. [Endpoints](#endpoints)
    - [POST /api/v1/crawl](#post-apiv1crawl)
    - [GET /api/v1/search](#get-apiv1searchqquerylimitlimit)
 
@@ -22,13 +21,6 @@ The crawler is interactable via a webserver with two main endpoints (found below
 - Crawls a domain given a seed (initial url)
 - Search through keywords and recieve url
 - See statistics of words (most/least used)
-
-## Topics Covered
-
-- Concurrency & Multithreading in Go
-- Docker Containers
-- Restful API’s in Go
-- Object Oriented Programming in Go
 
 ## Tech Stack
 ### Frontend (Hosted on Vercel)
