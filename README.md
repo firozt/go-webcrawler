@@ -14,8 +14,8 @@
 ---
 
 ## Webcrawler, Indexer and WebServer in Go
-This project contains a fully functional webcrawler in go, that saves all content to a SQLite database (wiped every day).
-The crawler is interactable via a webserver with two main endpoints (found below). 
+This project contains a fully functional webcrawler and web server written in go, within the client directory, that saves all content to a SQLite database (wiped every 4 hours).
+The crawler is interactable via a webserver with two main endpoints (found below). The server directory contains a React Typescript Vite application that acts as a simple GUI to interact with the webcrawler backend
 
 ## Functionality
 - Crawls a domain given a seed (initial url)
