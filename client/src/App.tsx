@@ -15,6 +15,7 @@ function App() {
     setIsLightMode(checkDarkModeStorage())
   },[])
 
+  // 
   useEffect(() => {
     const bg = isLightMode ? "white" : "#242424";
     document.documentElement.style.setProperty("--background-color", bg);
@@ -25,7 +26,7 @@ function App() {
   const checkDarkModeStorage = (): boolean => {
     try {
       const storageVal: string = localStorage.getItem("isLightMode") ?? ""
-      if (storageVal.toLowerCase() != "true" || storageVal.toLowerCase() != "false") {
+      if (storageVal.toLowerCase() != "true" && storageVal.toLowerCase() != "false") {
         throw Error
       }
       return JSON.parse(storageVal)
