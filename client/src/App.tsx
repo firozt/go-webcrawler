@@ -109,6 +109,7 @@ function App() {
     }
     axios.post(API_URL,requestBody)
     .then(() => {
+      setSearchResults([])
       setSearchMode(true) // load search page
       
     }).catch(((err: unknown) => {

@@ -27,7 +27,7 @@ func ParseSite(url string) (string, error) {
 
 // removes the html tags such as <div> <h1> etc, returns clean text and a list of links fround within href's
 // texts, links
-func GetTextAndLinks(htmlStr string) ([]string, []string, string) {
+func GetTextAndLinks(htmlStr string, domain string) ([]string, []string, string) {
 	// obtains tree strucute of the html
 	htmlStr = CleanText(htmlStr)
 	doc, err := html.Parse(strings.NewReader(htmlStr))
@@ -55,9 +55,36 @@ func CleanText(raw string) string {
 
 }
 
-func ValidateLinks(links []string, curUrl string) []string {
+func GetDomain(url string) string {
+	// remove http:// or https://
+	if strings.HasPrefix(url, "http://") {
+		url = url[len("http://"):]
+	} else if strings.HasPrefix(url, "https://") {
+		url = url[len("https://"):]
+	} else {
+		return "" // not http
+	}
+	// remove path
+	if idx := strings.Index(url, "/"); idx != -1 {
+		url = url[:idx]
+	}
+
+	// Remove port if present
+	if idx := strings.Index(url, ":"); idx != -1 {
+		url = url[:idx]
+	}
+
+	return url
+}
+
+func ValidateLinks(links []string, curUrl string, domain string, allowExternal bool) []string {
 	valids := []string{}
 	for _, link := range links {
+		curDomain := GetDomain(link)
+		if !allowExternal && curDomain != domain {
+			// ingore external
+			continue
+		}
 
 		// see if its a https link
 		if isValidURL(link) {

@@ -25,35 +25,13 @@ func NewCrawler(repo *repository.PagesRepository, MAX_ADDED_LINKS_PER_PAGE uint8
 	}
 }
 
-func GetDomain(url string) string {
-	// remove http:// or https://
-	if strings.HasPrefix(url, "http://") {
-		url = url[len("http://"):]
-	} else if strings.HasPrefix(url, "https://") {
-		url = url[len("https://"):]
-	} else {
-		return "" // not http
-	}
-	// remove path
-	if idx := strings.Index(url, "/"); idx != -1 {
-		url = url[:idx]
-	}
-
-	// Remove port if present
-	if idx := strings.Index(url, ":"); idx != -1 {
-		url = url[:idx]
-	}
-
-	return url
-}
-
 // starts the crawling proces on a url
-func (c *WebCrawler) StartCrawl(url string) error {
+func (c *WebCrawler) StartCrawl(url string, allowExternal bool) error {
 	println("STARTING CRAWL")
 	q := TSQ.NewThreadSafeQueue[string]()
 	q.Enqueue(url)
 	q.Dequeue()
-	links, err := c.handlePage(url)
+	links, err := c.handlePage(url, false) // never do external on first page, allows more related links
 
 	if err != nil {
 		fmt.Printf("ERROR: Could not scrape %v\nError: %v\n", url, err)
@@ -67,7 +45,7 @@ func (c *WebCrawler) StartCrawl(url string) error {
 	var i uint8 = 0
 	for i < c.NUM_OF_WORKERS || q.Len() < 1 {
 		wg.Add(1)
-		go workerAction(c, q, &wg)
+		go workerAction(c, q, &wg, allowExternal)
 		i++
 	}
 
@@ -77,7 +55,7 @@ func (c *WebCrawler) StartCrawl(url string) error {
 }
 
 // function that keeps parsing and saving the start of the queue
-func workerAction(c *WebCrawler, q *TSQ.ThreadSafeQueue[string], wg *sync.WaitGroup) {
+func workerAction(c *WebCrawler, q *TSQ.ThreadSafeQueue[string], wg *sync.WaitGroup, allowExternal bool) {
 	for i := 0; i < 5; i++ {
 		url, ok := q.Dequeue()
 		println("CHECKING ", q.Len(), url)
@@ -85,7 +63,7 @@ func workerAction(c *WebCrawler, q *TSQ.ThreadSafeQueue[string], wg *sync.WaitGr
 		if !ok {
 			break
 		}
-		links, err := c.handlePage(url)
+		links, err := c.handlePage(url, allowExternal)
 		if err != nil {
 			continue
 		}
@@ -111,14 +89,14 @@ func workerAction(c *WebCrawler, q *TSQ.ThreadSafeQueue[string], wg *sync.WaitGr
 	wg.Done()
 }
 
-func (c *WebCrawler) handlePage(url string) ([]string, error) {
+func (c *WebCrawler) handlePage(url string, allowExternal bool) ([]string, error) {
 	htmlBody, err := parser.ParseSite(url)
 	var links []string
 	if err != nil {
 		return links, err
 	}
-
-	text, links, title := parser.GetTextAndLinks(htmlBody)
+	domain := parser.GetDomain(url)
+	text, links, title := parser.GetTextAndLinks(htmlBody, domain)
 
 	cleaned_text := parser.CleanText(strings.Join(text, " "))
 	page := repository.Page{
@@ -130,7 +108,7 @@ func (c *WebCrawler) handlePage(url string) ([]string, error) {
 	if err := c.repo.InsertPage(page); err != nil {
 		return links, err
 	}
-	links = parser.ValidateLinks(links, url)
+	links = parser.ValidateLinks(links, url, domain, allowExternal)
 
 	return links, err
 }

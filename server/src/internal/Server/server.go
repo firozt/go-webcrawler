@@ -112,7 +112,7 @@ func (s *Server) StartCrawl(resp http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = s.crawler.StartCrawl(config.URL)
+	err = s.crawler.StartCrawl(config.URL, config.FollowExternal)
 	if err != nil {
 		http.Error(resp, fmt.Sprintf("crawl failed: %v", err), http.StatusInternalServerError)
 		return
