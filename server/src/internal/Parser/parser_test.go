@@ -123,6 +123,7 @@ func TestGetDomain(t *testing.T) {
 		{"https://example.com", "example.com"},
 		{"ftp://example.com", ""},
 		{"", ""},
+		{"https://www.malgow.net", "www.malgow.net"},
 	}
 
 	for _, test := range testCases {

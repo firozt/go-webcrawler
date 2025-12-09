@@ -79,35 +79,36 @@ func GetDomain(url string) string {
 
 func ValidateLinks(links []string, curUrl string, domain string, allowExternal bool) []string {
 	valids := []string{}
+
 	for _, link := range links {
-		curDomain := GetDomain(link)
-		if !allowExternal && curDomain != domain {
-			// ingore external
-			continue
-		}
+		fmt.Printf("Checking link %s : ", link)
+		var validLink string
+		var ok error
 
-		// see if its a https link
+		// 1. If it's already a valid URL
 		if isValidURL(link) {
-			valids = append(valids, link)
+			validLink = link
+			// println("Success, is already a valid link")
+		} else if validLink, ok = absolutePathToUrl(link, curUrl); ok == nil {
+			// println("Success, is absolute:", validLink)
+		} else if validLink, ok = relativePathToUrl(link, curUrl); ok == nil {
+			// println("Success, is relative:", validLink)
+		} else {
+			// println("Not valid, skipping")
 			continue
 		}
 
-		// see if its an absolute path
-		valid_link, ok := absolutePathToUrl(link, curUrl)
-
-		if ok == nil {
-			valids = append(valids, valid_link)
+		// 2. Check domain AFTER we have a valid URL
+		curDomain := GetDomain(validLink)
+		if !allowExternal && curDomain != domain {
+			println("Failed because external")
 			continue
 		}
 
-		// see if its a relative path
-		valid_link, ok = relativePathToUrl(link, curUrl)
-		if ok == nil {
-			valids = append(valids, valid_link)
-			continue
-		}
-
+		// 3. Append valid link
+		valids = append(valids, validLink)
 	}
+
 	return valids
 }
 
@@ -193,20 +194,30 @@ func dfs(head *html.Node, result *[]string, links *[]string, title *string) {
 	if head == nil {
 		return
 	}
-	// check node type
+
+	// Skip <script> and <style>, cant have subtree within this
+	if head.Type == html.ElementNode &&
+		(head.Data == "script" || head.Data == "style") {
+		return
+	}
+
+	// get title
 	if head.Type == html.ElementNode && head.Data == "title" && head.FirstChild != nil {
 		*title = head.FirstChild.Data
 	}
 
+	// get text nodes
 	if head.Type == html.TextNode {
 		*result = append(*result, strings.ToLower(head.Data))
 	}
+
+	// get links
 	if isLinkNode(head) {
 		href := getHref(head)
 		*links = append(*links, href)
 	}
 
-	// iterate over all children nodes
+	// check children DFS
 	for child := head.FirstChild; child != nil; child = child.NextSibling {
 		dfs(child, result, links, title)
 	}

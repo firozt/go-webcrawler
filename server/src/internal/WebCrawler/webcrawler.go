@@ -58,7 +58,7 @@ func (c *WebCrawler) StartCrawl(url string, allowExternal bool) error {
 func workerAction(c *WebCrawler, q *TSQ.ThreadSafeQueue[string], wg *sync.WaitGroup, allowExternal bool) {
 	for i := 0; i < 5; i++ {
 		url, ok := q.Dequeue()
-		println("CHECKING ", q.Len(), url)
+		println("CHECKING ", q.Len(), url, "INDEX ", i)
 
 		if !ok {
 			break

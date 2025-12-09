@@ -15,7 +15,7 @@ func main() {
 	// config variables
 	var HOSTNAME string = "localhost"
 	var PORT string = "8080"
-	var MAX_ADDED_LINKS_PER_PAGE uint8 = 3
+	var MAX_ADDED_LINKS_PER_PAGE uint8 = 10
 	var NUM_OF_WORKERS uint8 = 5
 
 	// starting everything
