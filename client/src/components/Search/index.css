@@ -1,0 +1,51 @@
+
+.search {
+  display: flex;
+  height: 40px;
+  width: min(400px,95%);
+  border-radius: 10px;
+  overflow: hidden;
+  background-color: white;
+  box-sizing: border-box;
+}
+
+.search h2 {
+  width: 50px;
+  font-size: 16px;
+  padding: 5px;
+  color: black;
+  font-weight: normal;
+  text-align: center;
+  align-self: center;
+}
+
+.search input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  padding: 0 10px;
+  box-sizing: border-box;
+}
+
+.search button {
+  width: 70px;
+  border: none;
+  background-color: aliceblue;
+  color: black;
+  cursor: pointer;
+  text-align: center;
+}
+
+.search button:hover {
+  background-color: black;
+  color: white;
+  transition: all cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.5s;
+}
+
+.search #divider {
+  width: 1px;
+  height: 70%;
+  background-color: rgba(0, 0, 0, 0.318);
+  margin: auto;
+}

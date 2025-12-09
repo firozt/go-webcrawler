@@ -1,0 +1,25 @@
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  width: 95%;
+  margin: auto;
+  padding-top: 25px;
+  z-index: 10;
+}
+
+
+.navbar p {
+  letter-spacing: 1px;
+}
+
+.navbar #github {
+  cursor: pointer;
+}
+
+.navbar a {
+  cursor: pointer;
+}
+
+a {
+  color: rgba(255, 255, 255, 0.374);
+}
