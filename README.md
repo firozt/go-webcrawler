@@ -1,6 +1,23 @@
-# Webcrawler, Indexer and WebServer in Go
+# Table of Contents
+1. [Introduction](#webcrawler-indexer-and-webserver-in-go)
+2. [Functionality](#functionality)
+3. [Topics Covered](#topics-covered)
+4. [Tech Stack](#tech-stack)
+   - [Frontend](#frontend-hosted-on-vercel)
+   - [Backend](#backend-all-self-hosted)
+5. [Implementation](#implementation)
+   - [System Diagram of the Webcrawler](#system-diagram-of-the-webcrawler)
+   - [Package Structure](#package-structure)
+6. [Endpoints](#endpoints)
+   - [POST /api/v1/crawl](#post-apiv1crawl)
+   - [GET /api/v1/search](#get-apiv1searchqquerylimitlimit)
+
+---
+
+## Webcrawler, Indexer and WebServer in Go
 This project contains a fully functional webcrawler in go, that saves all content to a SQLite database (wiped every day).
 The crawler is interactable via a webserver with two main endpoints (found below). 
+
 ## Functionality
 - Crawls a domain given a seed (initial url)
 - Search through keywords and recieve url
