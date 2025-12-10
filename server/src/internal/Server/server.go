@@ -114,6 +114,7 @@ func (s *Server) StartCrawl(resp http.ResponseWriter, req *http.Request) {
 
 	err = s.crawler.StartCrawl(config.URL, config.FollowExternal)
 	if err != nil {
+		fmt.Println("Crawl failed: ", err)
 		http.Error(resp, fmt.Sprintf("crawl failed: %v", err), http.StatusInternalServerError)
 		return
 	}
@@ -126,7 +127,7 @@ func (s *Server) SearchCrawled(resp http.ResponseWriter, req *http.Request) {
 	// parse query parameters
 	query := req.URL.Query().Get("q")
 	limitStr := req.URL.Query().Get("limit")
-
+	fmt.Println("QUERY : ", query)
 	if query == "" {
 		http.Error(resp, "missing query parameter 'q'", http.StatusBadRequest)
 		return

@@ -37,13 +37,12 @@ func (p PagesRepository) InsertPage(page Page) error {
 // searches for phrase from DB
 func (p PagesRepository) SearchPages(phrase string, limit int) []Page {
 	var res []Page
-
-	rows, err := p.db.Query(`
-		SELECT url, title, content
-		FROM pages
-		WHERE pages MATCH ?
-		LIMIT ?
+	rows, err := p.db.Query(
+		`SELECT url, title, content
+		FROM pages 
+		WHERE pages MATCH ? LIMIT ?;
 	`, phrase, limit)
+
 	if err != nil {
 		log.Fatal("Failed trying to obtain pages, SQL Error:", err)
 		return res

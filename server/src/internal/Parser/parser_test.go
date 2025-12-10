@@ -17,6 +17,11 @@ func TestRelativePathToUrl(t *testing.T) {
 		{"./file.html", "https://example.com/path/to/page.html", "https://example.com/path/to/file.html"},
 		{".", "https://example.com/path/to/page.html", "https://example.com/path/to/"},
 		{"../sibling/file.html", "https://example.com/path/to/page.html", "https://example.com/path/sibling/file.html"},
+		{"../../../file.html", "https://example.com/a/b/page.html", "https://example.com/file.html"},
+		{"/file.html", "https://example.com/path/to/page.html", "https://example.com/file.html"},
+		{"../file.html", "https://example.com/page.html", "https://example.com/file.html"},
+		{"file.html", "https://example.com/path/to/", "https://example.com/path/to/file.html"},
+		{"", "https://example.com/path/to/page.html", "https://example.com/path/to/page.html"},
 	}
 
 	for i, testCase := range testCases {

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -27,19 +26,19 @@ func ParseSite(url string) (string, error) {
 
 // removes the html tags such as <div> <h1> etc, returns clean text and a list of links fround within href's
 // texts, links
-func GetTextAndLinks(htmlStr string, domain string) ([]string, []string, string) {
+func GetTextAndLinks(htmlStr string, domain string) ([]string, []string, string, error) {
 	// obtains tree strucute of the html
 	htmlStr = CleanText(htmlStr)
 	doc, err := html.Parse(strings.NewReader(htmlStr))
 	if err != nil {
-		log.Fatal("Error parsing html: ", err)
+		return nil, nil, "", errors.New("Unable to parse URL")
 	}
 
 	// perform DFS to obtain all text nodes
 	text, links := []string{}, []string{}
 	var title string
 	dfs(doc, &text, &links, &title)
-	return text, links, title
+	return text, links, title, nil
 }
 
 // removes whitespaces in htmls
@@ -77,36 +76,61 @@ func GetDomain(url string) string {
 	return url
 }
 
+func NormalizeURL(raw string) string {
+	u, err := url.Parse(raw)
+	if err != nil {
+		return raw
+	}
+
+	// append with index.html when the url doesnt change
+	if u.Path == "" || u.Path == "/" {
+		u.Path = "/index.html"
+	} else if strings.HasSuffix(u.Path, "/") {
+		u.Path = u.Path + "index.html"
+	}
+
+	// remove multiple slashes inside path
+	u.Path = strings.ReplaceAll(u.Path, "//", "/")
+
+	return u.String()
+}
+
+func RemoveFragment(raw string) string {
+	u, err := url.Parse(raw)
+	if err != nil {
+		// return original if parsing fails
+		return raw
+	}
+
+	u.Fragment = ""
+	return u.String()
+}
+
 func ValidateLinks(links []string, curUrl string, domain string, allowExternal bool) []string {
 	valids := []string{}
 
 	for _, link := range links {
-		fmt.Printf("Checking link %s : ", link)
 		var validLink string
 		var ok error
 
-		// 1. If it's already a valid URL
+		// normalize urls by removing index.html (as implied by browser already)
+		link = strings.TrimSuffix(link, "index.html")
+
 		if isValidURL(link) {
 			validLink = link
-			// println("Success, is already a valid link")
 		} else if validLink, ok = absolutePathToUrl(link, curUrl); ok == nil {
-			// println("Success, is absolute:", validLink)
 		} else if validLink, ok = relativePathToUrl(link, curUrl); ok == nil {
-			// println("Success, is relative:", validLink)
 		} else {
-			// println("Not valid, skipping")
 			continue
 		}
 
-		// 2. Check domain AFTER we have a valid URL
+		// check domain after we have a valid URL
 		curDomain := GetDomain(validLink)
 		if !allowExternal && curDomain != domain {
-			println("Failed because external")
 			continue
 		}
 
-		// 3. Append valid link
-		valids = append(valids, validLink)
+		valids = append(valids, NormalizeURL(validLink))
 	}
 
 	return valids
@@ -154,39 +178,20 @@ func absolutePathToUrl(absPath string, curPath string) (string, error) {
 	fullURL += absPath
 	return fullURL, nil
 }
+
 func relativePathToUrl(relPath string, curPath string) (string, error) {
-	// ./../path/to/file
-	var err error
-
-	if len(relPath) < 1 && !strings.HasPrefix(curPath, "https://") {
-		return "", errors.New("invalid relative path / url")
+	base, err := url.Parse(curPath)
+	if err != nil {
+		return "", err
 	}
 
-	var pathArr []string = strings.Split(curPath, "/")
-	var relPathArr []string = strings.Split(relPath, "/")
-	pathArr = pathArr[:len(pathArr)-1]
-
-	for _, action := range relPathArr {
-
-		if action == "." {
-			// skip
-			continue
-		} else if action == ".." {
-			// invalid current path, doesnt make sense
-			if len(pathArr)-1 < 0 {
-				return "", errors.New("invalid curpath")
-			}
-			pathArr = pathArr[:len(pathArr)-1]
-		} else {
-			pathArr = append(pathArr, action)
-		}
+	ref, err := url.Parse(relPath)
+	if err != nil {
+		return "", err
 	}
-	res := strings.Join(pathArr, "/")
-	if !strings.Contains(pathArr[len(pathArr)-1], ".") {
-		res += "/" // trailing / for folder
-	}
-	return res, err
 
+	resolved := base.ResolveReference(ref)
+	return resolved.String(), nil
 }
 
 // general purpose dfs that parses through html nodes looking for queried tag values

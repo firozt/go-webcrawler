@@ -54,36 +54,44 @@ func TestInsertPageFTS5(t *testing.T) {
 	}
 }
 
-func TestSearchPageFTS5(t *testing.T) {
-	db := setupTestDB(t)
+func TestSearchPages(t *testing.T) {
+	db := InitDB()
 	defer db.Close()
 
-	// insert example
 	repo := NewPagesRepository(db)
+
+	// Insert example page
 	page := Page{
 		URL:     "http://example.com",
 		Title:   "Example Page",
 		Content: "This is some test content",
 	}
 
-	err := repo.InsertPage(page)
-	if err != nil {
+	if err := repo.InsertPage(page); err != nil {
 		t.Fatalf("InsertPage failed: %v", err)
 	}
 
-	// Test 1: match should return 1 result
-	res := repo.SearchPages("some", 10)
-	if len(res) != 1 {
-		t.Errorf("expected 1 result, got %d", len(res))
-	} else {
-		t.Logf("Test 1 passed: found page with title %q", page.Title)
+	// Test case struct
+	type SearchTest struct {
+		query    string
+		expected int
 	}
 
-	// Test 2: no match should return 0 results
-	res = repo.SearchPages("this should be empty", 10)
-	if len(res) != 0 {
-		t.Errorf("expected 0 results, got %d", len(res))
-	} else {
-		t.Log("Test 2 passed: no results returned")
+	tests := []SearchTest{
+		{"some", 1},
+		{"this should return empty", 0},
+		{"this is", 1},
+	}
+
+	for _, tc := range tests {
+		t.Run("Test "+tc.query, func(t *testing.T) {
+			t.Parallel()
+			res := repo.SearchPages(tc.query, 10)
+
+			if len(res) != tc.expected {
+				t.Errorf("query %q: expected %d results, got %d",
+					tc.query, tc.expected, len(res))
+			}
+		})
 	}
 }

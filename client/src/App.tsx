@@ -98,6 +98,7 @@ function App() {
     if (!isValidUrl(urlInput)) {
       setError("The URL provided is not a valid http url. Please enter a valid URL to scrap in the form http://www.domain.com")
       setButtonClickable(true)
+      return
     }
 
     const API_URL: string = `${import.meta.env.VITE_API_DOMAIN}:${import.meta.env.VITE_API_PORT}/api/${import.meta.env.VITE_API_VER}/crawl`
@@ -131,23 +132,25 @@ function App() {
 
 const getClosestWords = (keyword: string, largeText: string, windowSize = 20): string[] => {
     const res: string[] = []
-    let largeTextArr = largeText.split(/\s+/)
+    const words = largeText.split(/\s+/)
+    const halfWindow = Math.floor(windowSize / 2)
+    let startIndex = 0
 
-    let indexOfKeyword = largeTextArr.findIndex(word => word === keyword)
+    while (true) {
+        // find the next occurrence of the keyword as a substring
+        const idx = largeText.indexOf(keyword, startIndex)
+        if (idx === -1) break
 
-    while (indexOfKeyword !== -1) {
-        const halfWindow = Math.floor(windowSize / 2)
+        // count words before the match
+        const preWords = largeText.slice(0, idx).split(/\s+/)
 
-        const lIndex = Math.max(0, indexOfKeyword - halfWindow)
-        const rIndex = Math.min(largeTextArr.length, indexOfKeyword + halfWindow + 1)
-        res.push(largeTextArr.slice(lIndex, rIndex).join(" "))
+        const lIndex = Math.max(0, preWords.length - halfWindow)
+        const rIndex = Math.min(words.length, preWords.length + keyword.split(/\s+/).length + halfWindow)
 
-        largeTextArr = [
-            ...largeTextArr.slice(0, indexOfKeyword),
-            ...largeTextArr.slice(indexOfKeyword + 1)
-        ]
+        res.push(words.slice(lIndex, rIndex).join(" "))
 
-        indexOfKeyword = largeTextArr.findIndex(word => word === keyword)
+        // move startIndex past this match
+        startIndex = idx + keyword.length
     }
 
     return res
