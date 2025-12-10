@@ -26,6 +26,7 @@ function App() {
   const [searchMode, setSearchMode] = useState<boolean>(false) // determines what page to show
   const [searchResults, setSearchResults] = useState<Page[]>([])
   const [buttonClickable, setButtonClickable] = useState<boolean>(true)
+  const [lastPhrase, setLastPhrase] = useState<string>('')
 
   useEffect(() => {
     // sets storage light mode
@@ -39,6 +40,7 @@ function App() {
   }, [isLightMode]);
 
   const handleSearch = () => {
+    setLastPhrase(searchInput)
     const API_URL: string = `
     ${import.meta.env.VITE_API_DOMAIN}:${import.meta.env.VITE_API_PORT}/api/${import.meta.env.VITE_API_VER}/search?q=${searchInput}&limit=10`
     console.log(API_URL)
@@ -175,19 +177,30 @@ const getClosestWords = (keyword: string, largeText: string, windowSize = 20): s
 
           </div>
           {
-            searchResults.map((page, idx) => {
-              return (
-                <div className='page-result' key={`${idx}-${page.url}`}>
-                  <h3>
-                    <a href={page.url} target='_BLANK'>
-                      {page.title}
-                    </a>
-                  </h3>
-                  <p>
-                    {page.content}
-                  </p>
-                </div>
-              )
+          searchResults.map((page, idx) => {
+          // split content by keyword
+          const regex = new RegExp(`(${lastPhrase})`, "gi");
+          const parts = page.content.split(regex);
+          return (
+            <div className='page-result' key={`${idx}-${page.url}`}>
+              <h3>
+                <a href={page.url} target='_BLANK'>
+                  {page.title}
+                </a>
+              </h3>
+              <p>
+              {parts.map((part, i) =>
+              regex.test(part) ? (
+              <span key={i} style={{ backgroundColor: "#e2cdabff", color: "#242424", padding:'1px' }}>
+                {part}
+              </span>
+                ) : (
+                  part
+                )
+                )}
+              </p>
+              </div>
+              );
             })
           }
         </div>        
