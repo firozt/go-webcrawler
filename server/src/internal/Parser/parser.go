@@ -82,11 +82,15 @@ func NormalizeURL(raw string) string {
 		return raw
 	}
 
-	// append with index.html when the url doesnt change
+	// append with index.html when the url doesnt change (domain only)
 	if u.Path == "" || u.Path == "/" {
 		u.Path = "/index.html"
+		// append if trailing / (not empty path)
 	} else if strings.HasSuffix(u.Path, "/") {
 		u.Path = u.Path + "index.html"
+		// add .html as we only care for this
+	} else if !strings.HasSuffix(u.Path, ".html") {
+		u.Path = u.Path + ".html"
 	}
 
 	// remove multiple slashes inside path
