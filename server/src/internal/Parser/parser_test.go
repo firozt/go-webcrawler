@@ -140,3 +140,71 @@ func TestGetDomain(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateLinks(t *testing.T) {
+	type TC struct {
+		name          string
+		links         []string
+		curURL        string
+		domain        string
+		allowExternal bool
+		expected      []string
+	}
+
+	tests := []TC{
+		{
+			name:   "Relative links resolved correctly",
+			curURL: "https://books.toscrape.com/",
+			domain: "books.toscrape.com",
+			links: []string{
+				"index.html",
+				"catalogue/category/books_1/index.html",
+				"catalogue/category/books/travel_2/index.html",
+			},
+			allowExternal: false,
+			expected: []string{
+				"https://books.toscrape.com/",
+				"https://books.toscrape.com/catalogue/category/books_1/",
+				"https://books.toscrape.com/catalogue/category/books/travel_2/",
+			},
+		},
+		{
+			name:   "Reject external domains when allowExternal=false",
+			curURL: "https://books.toscrape.com/",
+			domain: "books.toscrape.com",
+			links: []string{
+				"http://google.com",
+				"https://example.com",
+				"catalogue/category/books/philosophy_7/",
+			},
+			allowExternal: false,
+			expected: []string{
+				"https://books.toscrape.com/catalogue/category/books/philosophy_7/",
+			},
+		},
+		{
+			name:   "Allow external domains when allowExternal=true",
+			curURL: "https://books.toscrape.com/",
+			domain: "books.toscrape.com",
+			links: []string{
+				"https://example.com",
+				"catalogue/category/books/classics_6/index.html",
+			},
+			allowExternal: true,
+			expected: []string{
+				"https://example.com",
+				"https://books.toscrape.com/catalogue/category/books/classics_6/",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := ValidateLinks(tc.links, tc.curURL, tc.domain, tc.allowExternal)
+
+			if !reflect.DeepEqual(got, tc.expected) {
+				t.Errorf("ValidateLinks() failed\nExpected: %v\nGot: %v", tc.expected, got)
+			}
+		})
+	}
+}
