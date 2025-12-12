@@ -40,7 +40,9 @@ The crawler is interactable via a webserver with two main endpoints (found below
 <br>
 The diagram above shows the general design and architecutre of the webcrawler. There four key components. The Fetching of the URL's HTML, the parsing of the HTML to extract text content and href links, the insertion of the content and metadata to the SQLite database and finally the validation of the Href that feeds back to the link queue.
 <br>
+<br>
 For this project i decided to go with a thread pool architecture, where we have two thread pools that manage fetching of links, a heavily blocking action, and one for parsing, a computationally heavy action. The insertion to the database is only done via one thread, where it reads from a queue to insert from. This is done as writing to the database in SQLite is not thread safe. The validation of links goes through many checks and builds links from either relative or absolute path.
+<br>
 <br>
 Finally there is the manager thread which detects wether there is any action between the threads. If not this implies that there is nothing left to parse and we can terminate all threads and return a valid http response to the client.
 
