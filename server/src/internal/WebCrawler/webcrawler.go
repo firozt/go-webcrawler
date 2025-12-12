@@ -63,7 +63,9 @@ func workerAction(c *WebCrawler, q *TSQ.ThreadSafeQueue[string], wg *sync.WaitGr
 		println("CHECKING ", q.Len(), url)
 
 		if !ok {
-			break
+			// TODO make this blocking
+			time.Sleep(1 * time.Second)
+			continue
 		}
 		links := c.handlePage(url, allowExternal)
 
@@ -85,6 +87,7 @@ func workerAction(c *WebCrawler, q *TSQ.ThreadSafeQueue[string], wg *sync.WaitGr
 	// 	c.handlePage(url, q)
 	// 	time.Sleep(1 * time.Second) // wait a second so i dont get banned lol
 	// }
+	println("Worker Done.")
 	wg.Done()
 }
 

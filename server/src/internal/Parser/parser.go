@@ -76,6 +76,9 @@ func GetDomain(url string) string {
 	return url
 }
 
+// NEEDS TO:
+// remove index.html if it exists
+// remove fragments
 func NormalizeURL(raw string) string {
 	u, err := url.Parse(raw)
 	if err != nil {
@@ -84,13 +87,13 @@ func NormalizeURL(raw string) string {
 
 	// append with index.html when the url doesnt change (domain only)
 	if u.Path == "" || u.Path == "/" {
-		u.Path = "/index.html"
+		// u.Path = "/index.html"
 		// append if trailing / (not empty path)
 	} else if strings.HasSuffix(u.Path, "/") {
-		u.Path = u.Path + "index.html"
+		// u.Path = u.Path + "index.html"
 		// add .html as we only care for this
 	} else if !strings.HasSuffix(u.Path, ".html") {
-		u.Path = u.Path + ".html"
+		// u.Path = u.Path + ".html"
 	}
 
 	// remove multiple slashes inside path
