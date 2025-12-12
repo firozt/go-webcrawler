@@ -94,13 +94,15 @@ func fetcherWorker(workerId uint8, seenUrlCache *sync.Map, wg *sync.WaitGroup, u
 	for url := range urlQueue {
 		fmt.Printf("fetcher-%d: acquired url: %s\n", workerId, url)
 
-		if _, seen := seenUrlCache.LoadOrStore(url, true); seen {
-			atomic.AddInt64(pending, -1) // done with this URL, already seen
-			continue
-		}
+		// if _, seen := seenUrlCache.LoadOrStore(url, true); seen {
+		// 	fmt.Printf("--fetcher-%d seen URL already, dropping\n", workerId)
+		// 	atomic.AddInt64(pending, -1) // done with this URL, already seen
+		// 	continue
+		// }
 
 		htmlBody, err := parser.ParseSite(url)
 		if err != nil {
+			fmt.Printf("--fetcher-%d couldnt parse URL, dropping\n", workerId)
 			atomic.AddInt64(pending, -1) // cant parse, end
 			continue
 		}
@@ -124,6 +126,7 @@ func parserWorker(workerId uint8, seenUrlCache *sync.Map, wg *sync.WaitGroup, ur
 
 		textData, links, title, err := parser.GetTextAndLinks(fetchedData.HTMLBody, fetchedData.Domain)
 		if err != nil {
+			fmt.Printf("--parser-%d: Could not get text and links from html. dropping \n", workerId)
 			atomic.AddInt64(pending, -1)
 			continue
 		}
@@ -146,7 +149,8 @@ func parserWorker(workerId uint8, seenUrlCache *sync.Map, wg *sync.WaitGroup, ur
 			}
 		}
 
-		// Finished processing this page
+		// finished processing this page
+		fmt.Printf("parser-%d finished parsing\n", workerId)
 		atomic.AddInt64(pending, -1)
 	}
 }
@@ -156,7 +160,9 @@ func databaseInteractionWorker(wg *sync.WaitGroup, pageQueue chan *repository.Pa
 	defer wg.Done()
 	for page := range pageQueue {
 		if err := repo.InsertPage(*page); err != nil {
-			println("Could not insert into page")
+			println("--Could not insert into page")
+		} else {
+			fmt.Printf("inserted page %s  to db\n", page.URL)
 		}
 	}
 }

@@ -16,7 +16,7 @@ func main() {
 	var HOSTNAME string = "localhost"
 	var PORT string = "8080"
 	var MAX_ADDED_LINKS_PER_PAGE uint8 = 255
-	var NUM_OF_WORKERS uint8 = 5
+	var NUM_OF_WORKERS uint8 = 3
 
 	// starting everything
 	db := repository.InitDB() // creates db conn and obj
