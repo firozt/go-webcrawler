@@ -10,12 +10,12 @@ import (
 
 	parser "github.com/firozt/crawler/src/internal/Parser"
 	repository "github.com/firozt/crawler/src/internal/Repository"
-	// TSQ "github.com/firozt/crawler/src/internal/ThreadSafeQueue"
 )
 
 type WebCrawler struct {
 	repo                     *repository.PagesRepository
 	MAX_ADDED_LINKS_PER_PAGE uint8
+	MAX_UNIQUE_CRAWLED_PAGES uint64
 	NUM_OF_WORKERS           uint8
 }
 
@@ -25,11 +25,12 @@ type FetchedWebData struct {
 	URL      string
 }
 
-func NewCrawler(repo *repository.PagesRepository, MAX_ADDED_LINKS_PER_PAGE uint8, NUM_OF_WORKERS uint8) *WebCrawler {
+func NewCrawler(repo *repository.PagesRepository, MAX_ADDED_LINKS_PER_PAGE uint8, NUM_OF_WORKERS uint8, MAX_UNIQUE_CRAWLED_PAGES uint64) *WebCrawler {
 	return &WebCrawler{
 		repo:                     repo,
 		MAX_ADDED_LINKS_PER_PAGE: MAX_ADDED_LINKS_PER_PAGE,
 		NUM_OF_WORKERS:           NUM_OF_WORKERS,
+		MAX_UNIQUE_CRAWLED_PAGES: MAX_UNIQUE_CRAWLED_PAGES,
 	}
 }
 
@@ -49,30 +50,31 @@ func (c *WebCrawler) StartCrawl(seedURL string, allowExternal bool) error {
 	toParseQueue := make(chan *FetchedWebData, MAX_QUEUE_SIZE)
 	pageQueue := make(chan *repository.Page, MAX_QUEUE_SIZE)
 
-	var pending int64            // stores pending actions, when this is 0 we can safely end all goroutines
+	var pending int64 // stores pending actions, when this is 0 we can safely end all goroutines
+	var numCrawledPages uint64
 	atomic.AddInt64(&pending, 1) // seed URL counts as pending
 	urlQueue <- seedURL
 
 	// start DB worker
 	wg.Add(1)
-	go databaseInteractionWorker(&wg, pageQueue, c.repo)
+	go c.databaseInteractionWorker(&wg, pageQueue)
 
 	// start fetcher work pool
 	for i := uint8(0); i < c.NUM_OF_WORKERS; i++ {
 		wg.Add(1)
-		go fetcherWorker(i, &seenUrlCache, &wg, urlQueue, toParseQueue, &pending)
+		go c.fetcherWorker(i, &wg, urlQueue, toParseQueue, &pending)
 	}
 
 	// start parser work pool
 	for i := uint8(0); i < c.NUM_OF_WORKERS; i++ {
 		wg.Add(1)
-		go parserWorker(i, &seenUrlCache, &wg, urlQueue, toParseQueue, pageQueue, allowExternal, &pending)
+		go c.parserWorker(i, &seenUrlCache, &wg, urlQueue, toParseQueue, pageQueue, allowExternal, &pending, &numCrawledPages)
 	}
 
 	// start manager routine
 	go func() {
 		for {
-			if atomic.LoadInt64(&pending) == 0 {
+			if atomic.LoadInt64(&pending) == 0 || numCrawledPages >= c.MAX_UNIQUE_CRAWLED_PAGES {
 				close(urlQueue)
 				close(toParseQueue)
 				close(pageQueue)
@@ -88,17 +90,11 @@ func (c *WebCrawler) StartCrawl(seedURL string, allowExternal bool) error {
 }
 
 // fetcher worker: gets URLs from urlQueue, fetches HTML, sends to toParseQueue
-func fetcherWorker(workerId uint8, seenUrlCache *sync.Map, wg *sync.WaitGroup, urlQueue chan string, toParseQueue chan *FetchedWebData, pending *int64) {
+func (c *WebCrawler) fetcherWorker(workerId uint8, wg *sync.WaitGroup, urlQueue chan string, toParseQueue chan *FetchedWebData, pending *int64) {
 	defer wg.Done()
 
 	for url := range urlQueue {
 		fmt.Printf("fetcher-%d: acquired url: %s\n", workerId, url)
-
-		// if _, seen := seenUrlCache.LoadOrStore(url, true); seen {
-		// 	fmt.Printf("--fetcher-%d seen URL already, dropping\n", workerId)
-		// 	atomic.AddInt64(pending, -1) // done with this URL, already seen
-		// 	continue
-		// }
 
 		htmlBody, err := parser.ParseSite(url)
 		if err != nil {
@@ -117,8 +113,7 @@ func fetcherWorker(workerId uint8, seenUrlCache *sync.Map, wg *sync.WaitGroup, u
 }
 
 // parser worker: parses HTML, produces pages and new URLs
-func parserWorker(workerId uint8, seenUrlCache *sync.Map, wg *sync.WaitGroup, urlQueue chan string, toParseQueue chan *FetchedWebData,
-	pageQueue chan *repository.Page, allowExternal bool, pending *int64) {
+func (c *WebCrawler) parserWorker(workerId uint8, seenUrlCache *sync.Map, wg *sync.WaitGroup, urlQueue chan string, toParseQueue chan *FetchedWebData, pageQueue chan *repository.Page, allowExternal bool, pending *int64, numCrawledPages *uint64) {
 	defer wg.Done()
 
 	for fetchedData := range toParseQueue {
@@ -142,8 +137,14 @@ func parserWorker(workerId uint8, seenUrlCache *sync.Map, wg *sync.WaitGroup, ur
 
 		// Add validated links to the queue
 		validatedLinks := parser.ValidateLinks(links, fetchedData.URL, fetchedData.Domain, allowExternal)
+
+		successfullAdds := uint8(0) // holds number of actual adds to queue
 		for _, link := range validatedLinks {
+			if successfullAdds >= c.MAX_ADDED_LINKS_PER_PAGE {
+				break
+			}
 			if _, seen := seenUrlCache.LoadOrStore(link, true); !seen {
+				successfullAdds++
 				atomic.AddInt64(pending, 1)
 				urlQueue <- link
 			}
@@ -151,15 +152,16 @@ func parserWorker(workerId uint8, seenUrlCache *sync.Map, wg *sync.WaitGroup, ur
 
 		// finished processing this page
 		fmt.Printf("parser-%d finished parsing\n", workerId)
+		atomic.AddUint64(numCrawledPages, 1)
 		atomic.AddInt64(pending, -1)
 	}
 }
 
-// DB worker: single goroutine inserts pages into the database
-func databaseInteractionWorker(wg *sync.WaitGroup, pageQueue chan *repository.Page, repo *repository.PagesRepository) {
+// DB worker single goroutine inserts pages into the database
+func (c *WebCrawler) databaseInteractionWorker(wg *sync.WaitGroup, pageQueue chan *repository.Page) {
 	defer wg.Done()
 	for page := range pageQueue {
-		if err := repo.InsertPage(*page); err != nil {
+		if err := c.repo.InsertPage(*page); err != nil {
 			println("--Could not insert into page")
 		} else {
 			fmt.Printf("inserted page %s  to db\n", page.URL)

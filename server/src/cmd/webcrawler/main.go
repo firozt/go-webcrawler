@@ -17,12 +17,13 @@ func main() {
 	var PORT string = "8080"
 	var MAX_ADDED_LINKS_PER_PAGE uint8 = 255
 	var NUM_OF_WORKERS uint8 = 3
+	var MAX_UNIQUE_CRAWLED_PAGES uint64 = 50
 
 	// starting everything
 	db := repository.InitDB() // creates db conn and obj
 	defer db.Close()
-	pagesRepo := repository.NewPagesRepository(db)                                           // creates pagesRepo API using DB
-	webcrawler := webcrawler.NewCrawler(pagesRepo, MAX_ADDED_LINKS_PER_PAGE, NUM_OF_WORKERS) // crawls sites and saves to DB
-	server := server.NewServer(webcrawler, HOSTNAME, PORT)                                   // creates webserver instance
-	server.Run()                                                                             // runs server
+	pagesRepo := repository.NewPagesRepository(db)                                                                     // creates pagesRepo API using DB
+	webcrawler := webcrawler.NewCrawler(pagesRepo, MAX_ADDED_LINKS_PER_PAGE, NUM_OF_WORKERS, MAX_UNIQUE_CRAWLED_PAGES) // crawls sites and saves to DB
+	server := server.NewServer(webcrawler, HOSTNAME, PORT)                                                             // creates webserver instance
+	server.Run()                                                                                                       // runs server
 }
