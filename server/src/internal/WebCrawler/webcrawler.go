@@ -5,17 +5,24 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	parser "github.com/firozt/crawler/src/internal/Parser"
 	repository "github.com/firozt/crawler/src/internal/Repository"
-	TSQ "github.com/firozt/crawler/src/internal/ThreadSafeQueue"
+	// TSQ "github.com/firozt/crawler/src/internal/ThreadSafeQueue"
 )
 
 type WebCrawler struct {
 	repo                     *repository.PagesRepository
 	MAX_ADDED_LINKS_PER_PAGE uint8
 	NUM_OF_WORKERS           uint8
+}
+
+type FetchedWebData struct {
+	HTMLBody string
+	Domain   string
+	URL      string
 }
 
 func NewCrawler(repo *repository.PagesRepository, MAX_ADDED_LINKS_PER_PAGE uint8, NUM_OF_WORKERS uint8) *WebCrawler {
@@ -26,96 +33,132 @@ func NewCrawler(repo *repository.PagesRepository, MAX_ADDED_LINKS_PER_PAGE uint8
 	}
 }
 
-// starts the crawling proces on a url
-func (c *WebCrawler) StartCrawl(url string, allowExternal bool) error {
-	url = parser.NormalizeURL(url)
-	if _, err := parser.ParseSite(url); err != nil {
-		return errors.New("initial url is not a valid site")
+func (c *WebCrawler) StartCrawl(seedURL string, allowExternal bool) error {
+	println("============ STARTED CRAWLING ============")
+
+	seedURL = parser.NormalizeURL(seedURL)
+	if !parser.IsValidURL(seedURL) {
+		return errors.New("initial URL is not valid")
 	}
 
-	println("STARTING CRAWL")
-	q := TSQ.NewThreadSafeQueue[string]()
-	q.Enqueue(url)
-	q.Dequeue()
-	links := c.handlePage(url, false) // never do external on first page, allows more related links
-	fmt.Printf("INTIAL LINKS %s", links)
-	for _, link := range links {
-		q.Enqueue(parser.NormalizeURL(parser.RemoveFragment(link)))
-	}
 	var wg sync.WaitGroup
+	var seenUrlCache sync.Map
 
-	var i uint8 = 0
-	for i < c.NUM_OF_WORKERS && !(q.Len() < 1) {
+	const MAX_QUEUE_SIZE = 1000
+	urlQueue := make(chan string, MAX_QUEUE_SIZE)
+	toParseQueue := make(chan *FetchedWebData, MAX_QUEUE_SIZE)
+	pageQueue := make(chan *repository.Page, MAX_QUEUE_SIZE)
+
+	var pending int64            // stores pending actions, when this is 0 we can safely end all goroutines
+	atomic.AddInt64(&pending, 1) // seed URL counts as pending
+	urlQueue <- seedURL
+
+	// start DB worker
+	wg.Add(1)
+	go databaseInteractionWorker(&wg, pageQueue, c.repo)
+
+	// start fetcher work pool
+	for i := uint8(0); i < c.NUM_OF_WORKERS; i++ {
 		wg.Add(1)
-		go workerAction(c, q, &wg, allowExternal)
-		i++
+		go fetcherWorker(i, &seenUrlCache, &wg, urlQueue, toParseQueue, &pending)
 	}
 
-	wg.Wait()
-	println("ALL CRAWLING DONE")
+	// start parser work pool
+	for i := uint8(0); i < c.NUM_OF_WORKERS; i++ {
+		wg.Add(1)
+		go parserWorker(i, &seenUrlCache, &wg, urlQueue, toParseQueue, pageQueue, allowExternal, &pending)
+	}
+
+	// start manager routine
+	go func() {
+		for {
+			if atomic.LoadInt64(&pending) == 0 {
+				close(urlQueue)
+				close(toParseQueue)
+				close(pageQueue)
+				return
+			}
+			time.Sleep(500 * time.Millisecond) // polling rate, twice a second
+		}
+	}()
+
+	wg.Wait() // wait for all routines to finish
+	println("============ FINISHED CRAWLING ============")
 	return nil
 }
 
-// function that keeps parsing and saving the start of the queue
-func workerAction(c *WebCrawler, q *TSQ.ThreadSafeQueue[string], wg *sync.WaitGroup, allowExternal bool) {
-	for i := 0; i < 7; i++ {
-		url, ok := q.Dequeue()
-		println("CHECKING ", q.Len(), url)
+// fetcher worker: gets URLs from urlQueue, fetches HTML, sends to toParseQueue
+func fetcherWorker(workerId uint8, seenUrlCache *sync.Map, wg *sync.WaitGroup, urlQueue chan string, toParseQueue chan *FetchedWebData, pending *int64) {
+	defer wg.Done()
 
-		if !ok {
-			// TODO make this blocking
-			time.Sleep(1 * time.Second)
+	for url := range urlQueue {
+		fmt.Printf("fetcher-%d: acquired url: %s\n", workerId, url)
+
+		if _, seen := seenUrlCache.LoadOrStore(url, true); seen {
+			atomic.AddInt64(pending, -1) // done with this URL, already seen
 			continue
 		}
-		links := c.handlePage(url, allowExternal)
 
-		unseenLinks := 0
-		// keep adding from links until we enq N unseen links or we reached the end of the link list
-		for i := 0; unseenLinks < int(c.MAX_ADDED_LINKS_PER_PAGE) && i < len(links); i++ {
-			if q.Enqueue(parser.RemoveFragment(links[i])) {
-				unseenLinks++
+		htmlBody, err := parser.ParseSite(url)
+		if err != nil {
+			atomic.AddInt64(pending, -1) // cant parse, end
+			continue
+		}
+
+		toParseQueue <- &FetchedWebData{
+			URL:      url,
+			Domain:   parser.GetDomain(url),
+			HTMLBody: htmlBody,
+		}
+		time.Sleep(1 * time.Second)
+	}
+}
+
+// parser worker: parses HTML, produces pages and new URLs
+func parserWorker(workerId uint8, seenUrlCache *sync.Map, wg *sync.WaitGroup, urlQueue chan string, toParseQueue chan *FetchedWebData,
+	pageQueue chan *repository.Page, allowExternal bool, pending *int64) {
+	defer wg.Done()
+
+	for fetchedData := range toParseQueue {
+		fmt.Printf("parser-%d: acquired fetchedData\n", workerId)
+
+		textData, links, title, err := parser.GetTextAndLinks(fetchedData.HTMLBody, fetchedData.Domain)
+		if err != nil {
+			atomic.AddInt64(pending, -1)
+			continue
+		}
+
+		cleanedTextData := parser.CleanText(strings.Join(textData, " "))
+		page := repository.Page{
+			Title:   title,
+			URL:     fetchedData.URL,
+			Content: cleanedTextData,
+		}
+
+		pageQueue <- &page
+
+		// Add validated links to the queue
+		validatedLinks := parser.ValidateLinks(links, fetchedData.URL, fetchedData.Domain, allowExternal)
+		for _, link := range validatedLinks {
+			if _, seen := seenUrlCache.LoadOrStore(link, true); !seen {
+				atomic.AddInt64(pending, 1)
+				urlQueue <- link
 			}
 		}
 
-		time.Sleep(1 * time.Second) // wait a second so i dont get banned lol
+		// Finished processing this page
+		atomic.AddInt64(pending, -1)
 	}
-	// for ok := true; ok; {
-	// 	url, ok := q.Dequeue()
-	// 	if !ok {
-	// 		break
-	// 	}
-	// 	c.handlePage(url, q)
-	// 	time.Sleep(1 * time.Second) // wait a second so i dont get banned lol
-	// }
-	println("Worker Done.")
-	wg.Done()
 }
 
-func (c *WebCrawler) handlePage(url string, allowExternal bool) []string {
-	htmlBody, err := parser.ParseSite(url)
-	var links []string
-	if err != nil {
-		return links
+// DB worker: single goroutine inserts pages into the database
+func databaseInteractionWorker(wg *sync.WaitGroup, pageQueue chan *repository.Page, repo *repository.PagesRepository) {
+	defer wg.Done()
+	for page := range pageQueue {
+		if err := repo.InsertPage(*page); err != nil {
+			println("Could not insert into page")
+		}
 	}
-	domain := parser.GetDomain(url)
-	text, links, title, err := parser.GetTextAndLinks(htmlBody, domain)
-	if err != nil {
-		return []string{}
-	}
-
-	cleaned_text := parser.CleanText(strings.Join(text, " "))
-	page := repository.Page{
-		Title:   title,
-		URL:     url,
-		Content: cleaned_text,
-	}
-	// save to database
-	if err := c.repo.InsertPage(page); err != nil {
-		return links
-	}
-	links = parser.ValidateLinks(links, url, domain, allowExternal)
-
-	return links
 }
 
 // simple passthrough, sqlite does the heavy lifting here

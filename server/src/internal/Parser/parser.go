@@ -2,7 +2,6 @@ package parser
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -31,7 +30,7 @@ func GetTextAndLinks(htmlStr string, domain string) ([]string, []string, string,
 	htmlStr = CleanText(htmlStr)
 	doc, err := html.Parse(strings.NewReader(htmlStr))
 	if err != nil {
-		return nil, nil, "", errors.New("Unable to parse URL")
+		return nil, nil, "", errors.New("unable to parse URL")
 	}
 
 	// perform DFS to obtain all text nodes
@@ -76,40 +75,26 @@ func GetDomain(url string) string {
 	return url
 }
 
-// NEEDS TO:
-// remove index.html if it exists
-// remove fragments
+// removes index.html if it exists
+// removes fragments
 func NormalizeURL(raw string) string {
 	u, err := url.Parse(raw)
 	if err != nil {
 		return raw
 	}
 
-	// append with index.html when the url doesnt change (domain only)
-	if u.Path == "" || u.Path == "/" {
-		// u.Path = "/index.html"
-		// append if trailing / (not empty path)
-	} else if strings.HasSuffix(u.Path, "/") {
-		// u.Path = u.Path + "index.html"
-		// add .html as we only care for this
-	} else if !strings.HasSuffix(u.Path, ".html") {
-		// u.Path = u.Path + ".html"
-	}
+	// remove fragment
+	u.Fragment = ""
 
 	// remove multiple slashes inside path
 	u.Path = strings.ReplaceAll(u.Path, "//", "/")
 
-	return u.String()
-}
-
-func RemoveFragment(raw string) string {
-	u, err := url.Parse(raw)
-	if err != nil {
-		// return original if parsing fails
-		return raw
+	// remove trailing "index.html"
+	if strings.HasSuffix(u.Path, "index.html") {
+		u.Path = strings.TrimSuffix(u.Path, "index.html")
+		u.Path = strings.TrimSuffix(u.Path, "/")
 	}
 
-	u.Fragment = ""
 	return u.String()
 }
 
@@ -123,8 +108,8 @@ func ValidateLinks(links []string, curUrl string, domain string, allowExternal b
 		// normalize urls by removing index.html (as implied by browser already)
 		link = strings.TrimSuffix(link, "index.html")
 
-		if isValidURL(link) {
-			validLink = link
+		if IsValidURL(link) {
+			validLink = link // check if links itself is already valid
 		} else if validLink, ok = absolutePathToUrl(link, curUrl); ok == nil {
 		} else if validLink, ok = relativePathToUrl(link, curUrl); ok == nil {
 		} else {
@@ -143,10 +128,8 @@ func ValidateLinks(links []string, curUrl string, domain string, allowExternal b
 	return valids
 }
 
-// -------------------- PRIVATE -------------------- //
-
 // checks if a url is valid
-func isValidURL(u string) bool {
+func IsValidURL(u string) bool {
 	parsed, err := url.Parse(u)
 	if err != nil {
 		return false // cannot parse
@@ -155,35 +138,24 @@ func isValidURL(u string) bool {
 		return false
 	}
 	return true
+	// -------------------- PRIVATE -------------------- //
+
 }
 
-func absolutePathToUrl(absPath string, curPath string) (string, error) {
-	if len(absPath) < 1 {
-		return "", errors.New("absPath is not a valid absolute path (must start with /)")
-	}
+func absolutePathToUrl(absPath string, curURL string) (string, error) {
 
-	parsed, err := url.Parse(curPath)
+	base, err := url.Parse(curURL)
 	if err != nil {
-		return "", errors.New("curPath URL is not valid")
+		return "", err
 	}
 
-	scheme := parsed.Scheme
-	host := parsed.Host
-
-	if scheme == "" || host == "" {
-		return "", errors.New("curPath must include scheme and host")
-	}
-	addTrailingSlash := false
-	if string(absPath[0]) != "/" && string(curPath[len(curPath)-1]) != "/" {
-		addTrailingSlash = true
+	ref, err := url.Parse(absPath)
+	if err != nil {
+		return "", err
 	}
 
-	fullURL := fmt.Sprintf("%s://%s", parsed.Scheme, parsed.Host)
-	if addTrailingSlash {
-		fullURL += "/"
-	}
-	fullURL += absPath
-	return fullURL, nil
+	resolved := base.ResolveReference(ref)
+	return resolved.String(), nil
 }
 
 func relativePathToUrl(relPath string, curPath string) (string, error) {
