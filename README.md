@@ -49,7 +49,7 @@ Finally there is the manager thread which detects wether there is any action bet
 ### Package Structure
 ![Diagram](images/package-diagram.png)
 <br>
-The diagram above shows the general package hierarchy and structure for this application. The server package (controller) exposes the endpoints, and uses the webcrawler package to handle webcrawling logic, which that too delegates parsing, thread safety and data store to their own packages. The unit tests for each repository is located in the same directory labeled *_test.go 
+The diagram above shows the general package hierarchy and structure for this application. The server package (controller) exposes the endpoints, and uses the webcrawler package to handle webcrawling logic, which that too delegates parsing and data store to their own packages. The unit tests for each repository is located in the same directory labeled *_test.go 
 ## Endpoints
 
 <details>
