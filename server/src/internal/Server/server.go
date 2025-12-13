@@ -12,8 +12,8 @@ import (
 )
 
 var allowedOrigins map[string]bool = map[string]bool{
-	"http://localhost:5173":                     true, // FOR DEV ONLY
-	"https://www.go-webcrawler.ramizabdulla.me": true,
+	"http://localhost:5173":                 true, // FOR DEV ONLY
+	"https://domainsearch.ramizabdulla.me/": true,
 }
 
 type Server struct {
