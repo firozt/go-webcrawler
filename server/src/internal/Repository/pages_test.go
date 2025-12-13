@@ -86,7 +86,7 @@ func TestSearchPages(t *testing.T) {
 	for _, tc := range tests {
 		t.Run("Test "+tc.query, func(t *testing.T) {
 			t.Parallel()
-			res := repo.SearchPages(tc.query, 10)
+			res := repo.SearchPages(tc.query, "", 10)
 
 			if len(res) != tc.expected {
 				t.Errorf("query %q: expected %d results, got %d",

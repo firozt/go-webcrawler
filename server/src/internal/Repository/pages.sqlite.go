@@ -6,6 +6,7 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"time"
 )
@@ -27,24 +28,29 @@ func NewPagesRepository(db *sql.DB) *PagesRepository {
 }
 
 func (p PagesRepository) InsertPage(page Page) error {
-	_, err := p.db.Exec(`
+	res, err := p.db.Exec(`
 		INSERT INTO pages (url, title, content, crawled_at)
 		SELECT ?, ?, ?, ?
 		WHERE NOT EXISTS (
 			SELECT 1 FROM pages WHERE url = ?
 		);
-    `, page.URL, page.Title, page.Content, time.Now().Format("2006-01-02 15:04:05"))
+    `, page.URL, page.Title, page.Content, time.Now().Format("2006-01-02 15:04:05"), page.URL)
+	if effected, _ := res.RowsAffected(); effected == 0 {
+		fmt.Printf("Row already in DB -- skipping\n")
+	}
 	return err
 }
 
 // searches for phrase from DB
-func (p PagesRepository) SearchPages(phrase string, limit int) []Page {
+func (p PagesRepository) SearchPages(phrase string, domain string, limit int) []Page {
 	var res []Page
-	rows, err := p.db.Query(
-		`SELECT url, title, content
-		FROM pages 
-		WHERE pages MATCH ? LIMIT ?;
-	`, phrase, limit)
+	rows, err := p.db.Query(`
+		SELECT url, title, content
+		FROM pages
+		WHERE pages MATCH ?
+		AND url LIKE ?
+		LIMIT ?;
+	`, phrase, domain, limit)
 
 	if err != nil {
 		log.Fatal("Failed trying to obtain pages, SQL Error:", err)

@@ -145,7 +145,7 @@ func (s *Server) SearchCrawled(resp http.ResponseWriter, req *http.Request) {
 	}
 
 	// fetch results from crawler repository
-	results := s.crawler.SearchCrawled(query, limit)
+	results := s.crawler.SearchCrawled(query, "malgow.net", limit)
 
 	// encode results as JSON
 	resp.Header().Set("Content-Type", "application/json")

@@ -174,7 +174,7 @@ func (c *WebCrawler) databaseInteractionWorker(wg *sync.WaitGroup, pageQueue cha
 	defer wg.Done()
 	for page := range pageQueue {
 		if err := c.repo.InsertPage(*page); err != nil {
-			println("--Could not insert into page")
+			fmt.Printf("--Could not insert into page:  %s\n ", err)
 		} else {
 			fmt.Printf("inserted page %s  to db\n", page.URL)
 		}
@@ -182,8 +182,8 @@ func (c *WebCrawler) databaseInteractionWorker(wg *sync.WaitGroup, pageQueue cha
 }
 
 // simple passthrough, sqlite does the heavy lifting here
-func (c *WebCrawler) SearchCrawled(phrase string, limit int) []repository.Page {
-	pages := c.repo.SearchPages(phrase, limit)
+func (c *WebCrawler) SearchCrawled(phrase string, domain string, limit int) []repository.Page {
+	pages := c.repo.SearchPages(phrase, domain, limit)
 	fmt.Printf("query returned %d number of rows", len(pages))
 	return pages
 }
