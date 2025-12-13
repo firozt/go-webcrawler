@@ -11,22 +11,19 @@ import (
 	webcrawler "github.com/firozt/crawler/src/internal/WebCrawler"
 )
 
-var allowedOrigins map[string]bool = map[string]bool{
-	"http://localhost:5173":                 true, // FOR DEV ONLY
-	"https://domainsearch.ramizabdulla.me/": true,
-}
-
 type Server struct {
-	hostname string
-	port     string
-	crawler  *webcrawler.WebCrawler
+	hostname       string
+	port           string
+	crawler        *webcrawler.WebCrawler
+	allowedOrigins *map[string]bool
 }
 
-func NewServer(crawler *webcrawler.WebCrawler, hostname string, port string) *Server {
+func NewServer(crawler *webcrawler.WebCrawler, hostname string, port string, allowedOrigins *map[string]bool) *Server {
 	return &Server{
-		crawler:  crawler,
-		hostname: hostname,
-		port:     port,
+		crawler:        crawler,
+		hostname:       hostname,
+		port:           port,
+		allowedOrigins: allowedOrigins,
 	}
 }
 
@@ -47,8 +44,7 @@ func (s *Server) MiddleWare(method string, next http.HandlerFunc) http.HandlerFu
 			next(w, r)
 			return
 		}
-
-		if !allowedOrigins[originHeader] {
+		if !(*s.allowedOrigins)[originHeader] {
 			http.Error(w, fmt.Sprintf("origin %s not allowed", originHeader), http.StatusMethodNotAllowed)
 			fmt.Printf("Refused API request from unauthorized origin: %s\n", originHeader)
 			return
