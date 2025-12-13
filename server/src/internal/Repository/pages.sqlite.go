@@ -44,13 +44,15 @@ func (p PagesRepository) InsertPage(page Page) error {
 // searches for phrase from DB
 func (p PagesRepository) SearchPages(phrase string, domain string, limit int) []Page {
 	var res []Page
+	domainLike := "%" + domain + "%"
+
 	rows, err := p.db.Query(`
 		SELECT url, title, content
 		FROM pages
 		WHERE pages MATCH ?
 		AND url LIKE ?
 		LIMIT ?;
-	`, phrase, domain, limit)
+	`, phrase, domainLike, limit)
 
 	if err != nil {
 		log.Fatal("Failed trying to obtain pages, SQL Error:", err)
