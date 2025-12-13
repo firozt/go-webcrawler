@@ -208,3 +208,30 @@ func TestValidateLinks(t *testing.T) {
 		})
 	}
 }
+
+func TestNormalizeURL(t *testing.T) {
+	type NormalizeTestCase struct {
+		input    string
+		expected string
+	}
+	tests := []NormalizeTestCase{
+		{"https://example.com", "https://example.com/"},
+		{"https://example.com/", "https://example.com/"},
+		{"https://example.com/page#section", "https://example.com/page"},
+		{"https://example.com/index.html", "https://example.com/"},
+		{"https://example.com/foo/index.html", "https://example.com/foo/"},
+		{"https://example.com//foo//bar", "https://example.com/foo/bar"},
+		{"https://example.com//foo/index.html#top", "https://example.com/foo/"},
+		{"https://example.com/foo/bar", "https://example.com/foo/bar"},
+		{"ht!tp://bad-url", "ht!tp://bad-url"},
+	}
+
+	for i, test := range tests {
+		t.Run(fmt.Sprintf("test-%d", i+1), func(t *testing.T) {
+			got := NormalizeURL(test.input)
+			if got != test.expected {
+				t.Errorf("NormalizeURL(%q) = %q; want %q", test.input, got, test.expected)
+			}
+		})
+	}
+}

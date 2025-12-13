@@ -17,7 +17,7 @@ func main() {
 	var PORT string = "8080"
 	var MAX_ADDED_LINKS_PER_PAGE uint8 = 255
 	var NUM_OF_WORKERS uint8 = 3
-	var MAX_UNIQUE_CRAWLED_PAGES uint64 = 50
+	var MAX_UNIQUE_CRAWLED_PAGES uint64 = 4
 
 	// starting everything
 	db := repository.InitDB() // creates db conn and obj

@@ -53,6 +53,8 @@ func (c *WebCrawler) StartCrawl(seedURL string, allowExternal bool) error {
 	var pending int64 // stores pending actions, when this is 0 we can safely end all goroutines
 	var numCrawledPages uint64
 	atomic.AddInt64(&pending, 1) // seed URL counts as pending
+
+	seenUrlCache.LoadOrStore(seedURL, true)
 	urlQueue <- seedURL
 
 	// start DB worker
@@ -62,7 +64,7 @@ func (c *WebCrawler) StartCrawl(seedURL string, allowExternal bool) error {
 	// start fetcher work pool
 	for i := uint8(0); i < c.NUM_OF_WORKERS; i++ {
 		wg.Add(1)
-		go c.fetcherWorker(i, &wg, urlQueue, toParseQueue, &pending)
+		go c.fetcherWorker(i, &wg, urlQueue, toParseQueue, &pending, &numCrawledPages)
 	}
 
 	// start parser work pool
@@ -74,9 +76,13 @@ func (c *WebCrawler) StartCrawl(seedURL string, allowExternal bool) error {
 	// start manager routine
 	go func() {
 		for {
-			if atomic.LoadInt64(&pending) == 0 || numCrawledPages >= c.MAX_UNIQUE_CRAWLED_PAGES {
+			// close all chanels (stop all goroutines) when conditions met
+			if atomic.LoadInt64(&pending) == 0 {
 				close(urlQueue)
 				close(toParseQueue)
+				for len(pageQueue) > 0 {
+					time.Sleep(500 * time.Millisecond)
+				}
 				close(pageQueue)
 				return
 			}
@@ -90,7 +96,7 @@ func (c *WebCrawler) StartCrawl(seedURL string, allowExternal bool) error {
 }
 
 // fetcher worker: gets URLs from urlQueue, fetches HTML, sends to toParseQueue
-func (c *WebCrawler) fetcherWorker(workerId uint8, wg *sync.WaitGroup, urlQueue chan string, toParseQueue chan *FetchedWebData, pending *int64) {
+func (c *WebCrawler) fetcherWorker(workerId uint8, wg *sync.WaitGroup, urlQueue chan string, toParseQueue chan *FetchedWebData, pending *int64, numCrawledPages *uint64) {
 	defer wg.Done()
 
 	for url := range urlQueue {
@@ -102,7 +108,7 @@ func (c *WebCrawler) fetcherWorker(workerId uint8, wg *sync.WaitGroup, urlQueue 
 			atomic.AddInt64(pending, -1) // cant parse, end
 			continue
 		}
-
+		// if atomic.LoadUint64(numCrawledPages) < c.MAX_UNIQUE_CRAWLED_PAGES { // channel still open
 		toParseQueue <- &FetchedWebData{
 			URL:      url,
 			Domain:   parser.GetDomain(url),
@@ -133,26 +139,32 @@ func (c *WebCrawler) parserWorker(workerId uint8, seenUrlCache *sync.Map, wg *sy
 			Content: cleanedTextData,
 		}
 
+		// tell db worker to insert this
 		pageQueue <- &page
+
+		// this site is done
+		atomic.AddUint64(numCrawledPages, 1)
+		fmt.Printf("parser-%d finished parsing\n", workerId)
 
 		// Add validated links to the queue
 		validatedLinks := parser.ValidateLinks(links, fetchedData.URL, fetchedData.Domain, allowExternal)
-
 		successfullAdds := uint8(0) // holds number of actual adds to queue
 		for _, link := range validatedLinks {
-			if successfullAdds >= c.MAX_ADDED_LINKS_PER_PAGE {
+			// check config upper bounds
+			if successfullAdds >= c.MAX_ADDED_LINKS_PER_PAGE || atomic.LoadUint64(numCrawledPages) >= c.MAX_UNIQUE_CRAWLED_PAGES {
 				break
 			}
-			if _, seen := seenUrlCache.LoadOrStore(link, true); !seen {
+			_, seen := seenUrlCache.LoadOrStore(link, true)
+			// is seen ignore
+			if !seen && atomic.LoadUint64(numCrawledPages)+uint64(atomic.LoadInt64(pending)) < c.MAX_UNIQUE_CRAWLED_PAGES {
 				successfullAdds++
 				atomic.AddInt64(pending, 1)
 				urlQueue <- link
 			}
 		}
 
-		// finished processing this page
+		// finished processing this page and adding all links
 		fmt.Printf("parser-%d finished parsing\n", workerId)
-		atomic.AddUint64(numCrawledPages, 1)
 		atomic.AddInt64(pending, -1)
 	}
 }

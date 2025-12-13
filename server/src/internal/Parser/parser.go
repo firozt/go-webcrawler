@@ -86,14 +86,15 @@ func NormalizeURL(raw string) string {
 	// remove fragment
 	u.Fragment = ""
 
+	if len(u.Path) == 0 {
+		u.Path = "/"
+	}
+
 	// remove multiple slashes inside path
 	u.Path = strings.ReplaceAll(u.Path, "//", "/")
 
 	// remove trailing "index.html"
-	if strings.HasSuffix(u.Path, "index.html") {
-		u.Path = strings.TrimSuffix(u.Path, "index.html")
-		u.Path = strings.TrimSuffix(u.Path, "/")
-	}
+	u.Path = strings.TrimSuffix(u.Path, "index.html")
 
 	return u.String()
 }
