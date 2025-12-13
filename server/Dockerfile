@@ -27,7 +27,7 @@ COPY --from=builder /app/data ./data
 COPY entry.sh .
 
 # make entrypoint executable
-RUN chmod +x entrypoint.sh
+RUN chmod +x entry.sh
 
 EXPOSE 8080
 
