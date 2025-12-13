@@ -124,30 +124,17 @@ func (s *Server) StartCrawl(resp http.ResponseWriter, req *http.Request) {
 }
 
 func (s *Server) SearchCrawled(resp http.ResponseWriter, req *http.Request) {
-	type SearchRequestBody struct {
-		URL string
-	}
 	// parse query parameters
 	query := req.URL.Query().Get("q")
 	limitStr := req.URL.Query().Get("limit")
-	fmt.Println("QUERY : ", query)
+	domain := req.URL.Query().Get("domain")
 	if query == "" {
 		http.Error(resp, "missing query parameter 'q'", http.StatusBadRequest)
 		return
 	}
 
-	body, err := io.ReadAll(req.Body)
-	defer req.Body.Close()
-	if err != nil {
-		http.Error(resp, "failed to read body of request", http.StatusBadRequest)
-		return
-	}
-
-	var config SearchRequestBody
-
-	// body parameters
-	if err := json.Unmarshal(body, &config); err != nil {
-		http.Error(resp, "Malformed body", http.StatusBadRequest)
+	if domain == "" {
+		http.Error(resp, "wildcard domain not allowed", http.StatusBadRequest)
 		return
 	}
 
@@ -163,7 +150,7 @@ func (s *Server) SearchCrawled(resp http.ResponseWriter, req *http.Request) {
 	}
 
 	// fetch results from crawler repository
-	results := s.crawler.SearchCrawled(query, config.URL, limit)
+	results := s.crawler.SearchCrawled(query, domain, limit)
 
 	// encode results as JSON
 	resp.Header().Set("Content-Type", "application/json")
