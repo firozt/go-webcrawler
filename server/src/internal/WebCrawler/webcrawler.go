@@ -104,7 +104,7 @@ func (c *WebCrawler) fetcherWorker(workerId uint8, wg *sync.WaitGroup, urlQueue 
 
 		htmlBody, err := parser.ParseSite(url)
 		if err != nil {
-			fmt.Printf("--fetcher-%d couldnt parse URL, dropping\n", workerId)
+			fmt.Printf("--fetcher-%d couldnt parse URL, dropping - err: %s\n", workerId, err)
 			atomic.AddInt64(pending, -1) // cant parse, end
 			continue
 		}
