@@ -28,8 +28,11 @@ func NewPagesRepository(db *sql.DB) *PagesRepository {
 
 func (p PagesRepository) InsertPage(page Page) error {
 	_, err := p.db.Exec(`
-        INSERT INTO pages (url, title, content, crawled_at)
-        VALUES (?, ?, ?, ?)
+		INSERT INTO pages (url, title, content, crawled_at)
+		SELECT ?, ?, ?, ?
+		WHERE NOT EXISTS (
+			SELECT 1 FROM pages WHERE url = ?
+		);
     `, page.URL, page.Title, page.Content, time.Now().Format("2006-01-02 15:04:05"))
 	return err
 }
