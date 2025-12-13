@@ -90,7 +90,7 @@ Searches through the database to find keywords within crawled web pages. Returns
 
 ## HTTP Method & URL
 
-`GET /api/v1/search?q={query}&limit={limit}`
+`GET /api/v1/search?q={query}&limit={limit}&domain={domain}`
 
 ### Query Parameters
 
@@ -98,21 +98,9 @@ Searches through the database to find keywords within crawled web pages. Returns
 | --------- | ------ | -------- | ------------------------------------------------- |
 | q         | string | yes      | The search query (keywords or phrase)             |
 | limit     | int    | no       | Maximum number of results to return (default: 10) |
+| url       | string | no       | Domains to search for (wild card "" is invalid    |
 
 
-### Request Body
-
-```json
-{
-  "url": "https://example.com",
-  "maxDepth": 2,
-  "followExternal": false
-}
-```
-
-| Field          | Type    | Required | Description                                         |
-| -------------- | ------- | -------- | --------------------------------------------------- |
-| url            | string  | yes      | The starting URL to crawl (domain is also fine here)|
 
 ## Example Response
 
