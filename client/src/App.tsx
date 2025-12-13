@@ -12,6 +12,7 @@ type CrawlPostBody = {
   followExternal: boolean
 }
 
+
 type Page = {
   url: string
   title: string
@@ -42,7 +43,7 @@ function App() {
   const handleSearch = () => {
     setLastPhrase(searchInput)
     const API_URL: string = `
-    ${import.meta.env.VITE_API_DOMAIN}:${import.meta.env.VITE_API_PORT}/api/${import.meta.env.VITE_API_VER}/search?q=${searchInput}&limit=10`
+    ${import.meta.env.VITE_API_DOMAIN}/api/${import.meta.env.VITE_API_VER}/search?q=${searchInput}&limit=10&domain=${urlInput}&domain=${urlInput}`
     console.log(API_URL)
     axios.get(API_URL)
     .then((resp: AxiosResponse<Page[]>) => {
@@ -103,7 +104,7 @@ function App() {
       return
     }
 
-    const API_URL: string = `${import.meta.env.VITE_API_DOMAIN}:${import.meta.env.VITE_API_PORT}/api/${import.meta.env.VITE_API_VER}/crawl`
+    const API_URL: string = `${import.meta.env.VITE_API_DOMAIN}/api/${import.meta.env.VITE_API_VER}/crawl`
     console.warn(API_URL)
     const requestBody: CrawlPostBody = {
       url: urlInput,
