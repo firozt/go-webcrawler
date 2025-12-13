@@ -92,18 +92,32 @@ Searches through the database to find keywords within crawled web pages. Returns
 
 `GET /api/v1/search?q={query}&limit={limit}`
 
-## Query Parameters
+### Query Parameters
 
 | Parameter | Type   | Required | Description                                       |
 | --------- | ------ | -------- | ------------------------------------------------- |
 | q         | string | yes      | The search query (keywords or phrase)             |
 | limit     | int    | no       | Maximum number of results to return (default: 10) |
 
-## Example Response
+
+### Request Body
 
 ```json
 {
-  "results": [
+  "url": "https://example.com",
+  "maxDepth": 2,
+  "followExternal": false
+}
+```
+
+| Field          | Type    | Required | Description                                         |
+| -------------- | ------- | -------- | --------------------------------------------------- |
+| url            | string  | yes      | The starting URL to crawl (domain is also fine here)|
+
+## Example Response
+
+```json
+  [
     {
       "url": "https://example.com/page1",
       "title": "Learning Go Networking",
@@ -116,7 +130,6 @@ Searches through the database to find keywords within crawled web pages. Returns
 
     }
   ]
-}
 ```
 
 </details>
