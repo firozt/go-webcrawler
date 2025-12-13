@@ -98,7 +98,7 @@ Searches through the database to find keywords within crawled web pages. Returns
 | --------- | ------ | -------- | ------------------------------------------------- |
 | q         | string | yes      | The search query (keywords or phrase)             |
 | limit     | int    | no       | Maximum number of results to return (default: 10) |
-| url       | string | no       | Domains to search for (wild card "" is invalid    |
+| url       | string | no       | Domains to search for (wild card "" is invalid)   |
 
 
 
