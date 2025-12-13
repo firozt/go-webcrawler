@@ -13,6 +13,7 @@ import (
 
 func main() {
 	// config variables
+	println("STARTING MAIN")
 	var HOSTNAME string = "localhost"
 	var PORT string = "8080"
 	var MAX_ADDED_LINKS_PER_PAGE uint8 = 255
@@ -25,5 +26,7 @@ func main() {
 	pagesRepo := repository.NewPagesRepository(db)                                                                     // creates pagesRepo API using DB
 	webcrawler := webcrawler.NewCrawler(pagesRepo, MAX_ADDED_LINKS_PER_PAGE, NUM_OF_WORKERS, MAX_UNIQUE_CRAWLED_PAGES) // crawls sites and saves to DB
 	server := server.NewServer(webcrawler, HOSTNAME, PORT)                                                             // creates webserver instance
-	server.Run()                                                                                                       // runs server
+	server.Run()
+	println("APPLICATION TERMINATED")
+	// runs server
 }
