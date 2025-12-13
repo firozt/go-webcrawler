@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"crypto/tls"
 	"errors"
 	"io"
 	"net/http"
@@ -227,7 +228,13 @@ func isLinkNode(n *html.Node) bool {
 // may return errors
 func getBody(url string) ([]byte, error) {
 	// setup request
-	client := &http.Client{}
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true, // skips cert verification
+			},
+		},
+	}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
