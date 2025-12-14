@@ -188,7 +188,7 @@ func dfs(head *html.Node, result *[]string, links *[]string, title *string) {
 	}
 
 	// get title, first <title> tag with data in the doc
-	if head.Type == html.ElementNode && head.Data == "title" && head.FirstChild != nil && len(*title) > 0 {
+	if head.Type == html.ElementNode && head.Data == "title" && head.FirstChild != nil && len(*title) == 0 {
 		*title = head.FirstChild.Data
 	}
 
