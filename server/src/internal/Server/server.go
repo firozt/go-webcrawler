@@ -6,15 +6,23 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"sync/atomic"
 
 	webcrawler "github.com/firozt/crawler/src/internal/WebCrawler"
 )
+
+type ServerStats struct {
+	totalCrawledEndpointsServed uint64
+	totalCrawledPages           uint64
+	totalSearchEndpointServed   uint64
+}
 
 type Server struct {
 	hostname       string
 	port           string
 	crawler        *webcrawler.WebCrawler
-	allowedOrigins *map[string]bool
+	allowedOrigins *map[string]bool // domain allowed set
+	stats          *ServerStats
 }
 
 func NewServer(crawler *webcrawler.WebCrawler, hostname string, port string, allowedOrigins *map[string]bool) *Server {
@@ -23,6 +31,11 @@ func NewServer(crawler *webcrawler.WebCrawler, hostname string, port string, all
 		hostname:       hostname,
 		port:           port,
 		allowedOrigins: allowedOrigins,
+		stats: &ServerStats{
+			totalCrawledEndpointsServed: *new(uint64),
+			totalCrawledPages:           *new(uint64),
+			totalSearchEndpointServed:   *new(uint64),
+		},
 	}
 }
 
@@ -67,6 +80,7 @@ func (s *Server) Run() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/v1/crawl", s.MiddleWare("POST", s.StartCrawl))
 	mux.HandleFunc("/api/v1/search", s.MiddleWare("GET", s.SearchCrawled))
+	mux.HandleFunc("/api/v1/health", s.MiddleWare("GET", s.Health))
 	mux.HandleFunc("/", s.CatchAll)
 	fmt.Printf("Server listening to %v:%v\n", s.hostname, s.port)
 	http.ListenAndServe(fmt.Sprintf("%v:%v", s.hostname, s.port), mux)
@@ -89,6 +103,9 @@ func (s *Server) CatchAll(resp http.ResponseWriter, req *http.Request) {
 }
 
 func (s *Server) StartCrawl(resp http.ResponseWriter, req *http.Request) {
+	if atomic.LoadUint64(&s.stats.totalCrawledPages) > 150000 { // roughly 3rps for 15 hours worth of straight requests
+		http.Error(resp, "The server is currently under too much load. Please try again at a later date", 429)
+	}
 	type StartCrawlBody struct {
 		URL            string `json:"url"`
 		MaxDepth       uint8  `json:"maxDepth"`
@@ -116,6 +133,10 @@ func (s *Server) StartCrawl(resp http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// add stats
+	atomic.AddUint64(&s.stats.totalCrawledEndpointsServed, 1)
+	atomic.AddUint64(&s.stats.totalCrawledPages, pagesCrawled)
+
 	// produce return
 	resp.Header().Set("Content-Type", "application/json")
 	resp.WriteHeader(http.StatusOK)
@@ -123,11 +144,13 @@ func (s *Server) StartCrawl(resp http.ResponseWriter, req *http.Request) {
 		"status":       "completed",
 		"pagesCrawled": strconv.Itoa(int(pagesCrawled)),
 	})
-	// json.
-	// resp.Write([]byte("Crawl finished"))
+
 }
 
 func (s *Server) SearchCrawled(resp http.ResponseWriter, req *http.Request) {
+	// add stats
+	atomic.AddUint64(&s.stats.totalSearchEndpointServed, 1)
+
 	// parse query parameters
 	query := req.URL.Query().Get("q")
 	limitStr := req.URL.Query().Get("limit")
@@ -161,4 +184,16 @@ func (s *Server) SearchCrawled(resp http.ResponseWriter, req *http.Request) {
 	if err := json.NewEncoder(resp).Encode(results); err != nil {
 		http.Error(resp, "failed to encode response", http.StatusInternalServerError)
 	}
+}
+
+// health check for the server, shows stats for server
+func (s *Server) Health(resp http.ResponseWriter, req *http.Request) {
+	resp.Header().Set("Content-Type", "application/json")
+	resp.WriteHeader(http.StatusOK)
+	json.NewEncoder(resp).Encode(map[string]any{
+		"health":                     "OK",
+		"totalPagesCrawled":          s.stats.totalCrawledPages,
+		"totalCrawlEndpointsServed":  s.stats.totalCrawledEndpointsServed,
+		"totalSearchEndpointsServed": s.stats.totalSearchEndpointServed,
+	})
 }
