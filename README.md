@@ -8,10 +8,13 @@
    - [System Diagram of the Webcrawler](#system-diagram-of-the-webcrawler)
    - [Package Structure](#package-structure)
 5. [Endpoints](#endpoints)
-   - [POST /api/v1/crawl](#post-apiv1crawl)
-   - [GET /api/v1/search](#get-apiv1searchqquerylimitlimit)
+   - [POST /api/v1/crawl](#post-apiv1crawl-start-a-crawl)
+   - [GET /api/v1/search](#get-apiv1search-search-crawled-pages)
+   - [GET /api/v1/health](#get-apiv1health-server-health)
+   - [GET /api/v1/*](#get-apiv1-catchall-endpoint)
 
 ---
+
 
 ## Webcrawler, Indexer and WebServer in Go
 This project contains a fully functional webcrawler and web server written in go, within the client directory, that saves all content to a SQLite database (wiped every 4 hours).
