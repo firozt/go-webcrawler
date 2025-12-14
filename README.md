@@ -1,6 +1,8 @@
 # Table of Contents
 1. [Introduction](#webcrawler-indexer-and-webserver-in-go)
 2. [Project Structure](#project-structure)
+   - [Server](#server)
+   - [Client](#client)
 3. [Tech Stack](#tech-stack)
    - [Frontend](#frontend-hosted-on-vercel)
    - [Backend](#backend-all-self-hosted)
@@ -35,8 +37,6 @@ The crawler is interactable via a webserver with two main endpoints (found below
 
 - `/server/data/`  
   Contains the SQLite database and `schema.sql` file to generate it.
-
----
 
 ### Client
 
