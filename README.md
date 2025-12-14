@@ -130,4 +130,54 @@ Searches through the database to find keywords within crawled web pages. Returns
 
 </details>
 
+<details>
+<summary>GET /api/v1/health</summary>
+## Description
+
+Displays server statistics and health. This endpoint of purely for logging reasons and threat detection.
+
+## HTTP Method & URL
+
+`GET /api/v1/health`
+
+## Example Response
+
+```json
+{
+    "health": "OK",
+    "totalCrawlEndpointsServed": 2,
+    "totalPagesCrawled": 48,
+    "totalSearchEndpointsServed": 4
+}
+```
+</details>
+
+<details>
+<summary>GET /api/v1/*</summary>
+
+## Description
+
+Catchall for unknown HTTP url request endpoints
+
+## HTTP Method & URL
+
+`GET /api/v1/*`
+
+## Example Response
+
+```json
+{
+    "error": {
+        "code": "ENDPOINT_NOT_FOUND",
+        "message": "The requested endpoint does not exist.",
+        "method": "GET",
+        "path": "/api/v1/unknown"
+    }
+}
+```
+
+</details>
+
+
 ---
+
