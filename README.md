@@ -18,13 +18,14 @@ This project contains a fully functional webcrawler and web server written in go
 The crawler is interactable via a webserver with two main endpoints (found below). The server directory contains a React Typescript Vite application that acts as a simple GUI to interact with the webcrawler backend
 
 ## File Structure
-/server/ -> Where the server side code and logic is held, this includes server code, webcrawler code and SQLite code
-/server/cmd/crawler -> Entrypoint of the backend go webcrawler and server
-/server/internal/... -> Package root directory for the Go backend, includes server package and webcrawler package
-/server/data/ -> Where the SQLite database is held aswell as the schema.sql file to generate it
+/server/ -> Where the server side code and logic is held, this includes server code, webcrawler code and SQLite code <br>
+/server/cmd/crawler -> Entrypoint of the backend go webcrawler and server <br>
+/server/internal/... -> Package root directory for the Go backend, includes server package and webcrawler package <br>
+/server/data/ -> Where the SQLite database is held aswell as the schema.sql file to generate it <br>
+<br>
+/client/ -> root of the Vite React application <br>
+/client/src/components -> where all the React custom components are held <br>
 
-/client/ -> root of the Vite React application
-/client/src/components -> where all the React custom components are held
 ## Tech Stack
 ### Frontend (Hosted on Vercel)
 - React
