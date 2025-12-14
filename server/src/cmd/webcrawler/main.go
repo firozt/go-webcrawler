@@ -29,6 +29,7 @@ func main() {
 
 	var allowedOrigins map[string]bool = map[string]bool{
 		"https://domainsearch.ramizabdulla.me/": true,
+		"https://domainsearch.ramizabdulla.me":  true,
 	}
 	if DEV_MODE {
 		allowedOrigins["http://localhost:5173"] = true

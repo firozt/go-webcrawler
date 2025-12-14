@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"strconv"
-	"time"
 
 	webcrawler "github.com/firozt/crawler/src/internal/WebCrawler"
 )
@@ -32,40 +31,32 @@ func NewServer(crawler *webcrawler.WebCrawler, hostname string, port string, all
 // returns handlerfunction (endpoint function)
 func (s *Server) MiddleWare(method string, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// log request
-		fmt.Printf("[%s] %s %s\n", time.Now().Format(time.RFC3339), r.Method, r.URL.Path)
-
-		// get origin of request and check if its whitelisted
 		originHeader := r.Header.Get("Origin")
 
-		// if there is no Origin header → request is not from browser → allow entirely, postman curl etc.
-		if originHeader == "" {
+		// set CORS headers for all responses if origin exists
+		if originHeader != "" {
+			if !(*s.allowedOrigins)[originHeader] {
+				w.Header().Set("Access-Control-Allow-Origin", originHeader)
+				http.Error(w, fmt.Sprintf("origin %s not allowed", originHeader), http.StatusMethodNotAllowed)
+				return
+			}
+			w.Header().Set("Access-Control-Allow-Origin", originHeader)
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		} else {
+			// for non-browser requests allow everything, maybe turn off?
 			w.Header().Set("Access-Control-Allow-Origin", "*")
-			next(w, r)
-			return
 		}
-		if !(*s.allowedOrigins)[originHeader] {
-			http.Error(w, fmt.Sprintf("origin %s not allowed", originHeader), http.StatusMethodNotAllowed)
-			fmt.Printf("Refused API request from unauthorized origin: %s\n", originHeader)
-			return
-		}
-
-		//  set access control headers
-		w.Header().Set("Access-Control-Allow-Origin", originHeader)
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-
+		// handle OPTIONS preflight
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
-
+		// check method
 		if r.Method != method {
-			fmt.Printf("Invalid method type, expected %v got %v\n", method, r.Method)
 			http.Error(w, fmt.Sprintf("method %s not allowed", r.Method), http.StatusMethodNotAllowed)
 			return
 		}
-
 		next(w, r)
 	}
 }
