@@ -8,10 +8,10 @@
    - [System Diagram of the Webcrawler](#system-diagram-of-the-webcrawler)
    - [Package Structure](#package-structure)
 5. [Endpoints](#endpoints)
-   - [POST /api/v1/crawl](#post-apiv1crawl-start-a-crawl)
-   - [GET /api/v1/search](#get-apiv1search-search-crawled-pages)
-   - [GET /api/v1/health](#get-apiv1health-server-health)
-   - [GET /api/v1/*](#get-apiv1-catchall-endpoint)
+   - [POST /api/v1/crawl](#endpoints)
+   - [GET /api/v1/search](#endpoints)
+   - [GET /api/v1/health](#endpoints)
+   - [GET /api/v1/*](#endpoints)
 
 ---
 
