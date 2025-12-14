@@ -1,6 +1,6 @@
 # Table of Contents
 1. [Introduction](#webcrawler-indexer-and-webserver-in-go)
-2. [Functionality](#functionality)
+2. [Project Structure](#project-structure)
 3. [Tech Stack](#tech-stack)
    - [Frontend](#frontend-hosted-on-vercel)
    - [Backend](#backend-all-self-hosted)
