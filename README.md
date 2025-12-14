@@ -17,10 +17,14 @@
 This project contains a fully functional webcrawler and web server written in go, within the client directory, that saves all content to a SQLite database (wiped every 4 hours).
 The crawler is interactable via a webserver with two main endpoints (found below). The server directory contains a React Typescript Vite application that acts as a simple GUI to interact with the webcrawler backend
 
-## Functionality
-- Crawls a domain given a seed (initial url)
-- Search through keywords and recieve url
+## File Structure
+/server/ -> Where the server side code and logic is held, this includes server code, webcrawler code and SQLite code
+/server/cmd/crawler -> Entrypoint of the backend go webcrawler and server
+/server/internal/... -> Package root directory for the Go backend, includes server package and webcrawler package
+/server/data/ -> Where the SQLite database is held aswell as the schema.sql file to generate it
 
+/client/ -> root of the Vite React application
+/client/src/components -> where all the React custom components are held
 ## Tech Stack
 ### Frontend (Hosted on Vercel)
 - React
