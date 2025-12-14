@@ -34,12 +34,12 @@ func NewCrawler(repo *repository.PagesRepository, MAX_ADDED_LINKS_PER_PAGE uint8
 	}
 }
 
-func (c *WebCrawler) StartCrawl(seedURL string, allowExternal bool) error {
+func (c *WebCrawler) StartCrawl(seedURL string, allowExternal bool) (uint64, error) {
 	println("============ STARTED CRAWLING ============")
 
 	seedURL = parser.NormalizeURL(seedURL)
 	if !parser.IsValidURL(seedURL) {
-		return errors.New("initial URL is not valid")
+		return 0, errors.New("initial URL is not valid")
 	}
 
 	var wg sync.WaitGroup
@@ -92,7 +92,7 @@ func (c *WebCrawler) StartCrawl(seedURL string, allowExternal bool) error {
 
 	wg.Wait() // wait for all routines to finish
 	println("============ FINISHED CRAWLING ============")
-	return nil
+	return numCrawledPages, nil
 }
 
 // fetcher worker: gets URLs from urlQueue, fetches HTML, sends to toParseQueue

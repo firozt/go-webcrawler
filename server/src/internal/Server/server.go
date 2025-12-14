@@ -36,6 +36,7 @@ func (s *Server) MiddleWare(method string, next http.HandlerFunc) http.HandlerFu
 		// set CORS headers for all responses if origin exists
 		if originHeader != "" {
 			if !(*s.allowedOrigins)[originHeader] {
+				fmt.Println("Reqeust was blocked due to CORS")
 				w.Header().Set("Access-Control-Allow-Origin", originHeader)
 				http.Error(w, fmt.Sprintf("origin %s not allowed", originHeader), http.StatusMethodNotAllowed)
 				return
@@ -64,18 +65,27 @@ func (s *Server) MiddleWare(method string, next http.HandlerFunc) http.HandlerFu
 // function to start the server, running on given host and port
 func (s *Server) Run() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", s.MiddleWare("GET", s.HandleRoot))
 	mux.HandleFunc("/api/v1/crawl", s.MiddleWare("POST", s.StartCrawl))
 	mux.HandleFunc("/api/v1/search", s.MiddleWare("GET", s.SearchCrawled))
-
+	mux.HandleFunc("/", s.CatchAll)
 	fmt.Printf("Server listening to %v:%v\n", s.hostname, s.port)
 	http.ListenAndServe(fmt.Sprintf("%v:%v", s.hostname, s.port), mux)
 }
 
 // ==================== ENDPOINTS ==================== //
 
-func (s *Server) HandleRoot(resp http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(resp, "Hello World")
+func (s *Server) CatchAll(resp http.ResponseWriter, req *http.Request) {
+	resp.Header().Set("Content-Type", "application/json")
+	resp.WriteHeader(http.StatusNotFound)
+
+	json.NewEncoder(resp).Encode(map[string]any{
+		"error": map[string]any{
+			"code":    "ENDPOINT_NOT_FOUND",
+			"message": "The requested endpoint does not exist.",
+			"method":  req.Method,
+			"path":    req.URL.Path,
+		},
+	})
 }
 
 func (s *Server) StartCrawl(resp http.ResponseWriter, req *http.Request) {
@@ -99,15 +109,22 @@ func (s *Server) StartCrawl(resp http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = s.crawler.StartCrawl(config.URL, config.FollowExternal)
+	pagesCrawled, err := s.crawler.StartCrawl(config.URL, config.FollowExternal)
 	if err != nil {
 		fmt.Println("Crawl failed: ", err)
 		http.Error(resp, fmt.Sprintf("crawl failed: %v", err), http.StatusInternalServerError)
 		return
 	}
 
+	// produce return
+	resp.Header().Set("Content-Type", "application/json")
 	resp.WriteHeader(http.StatusOK)
-	resp.Write([]byte("Crawl finished"))
+	json.NewEncoder(resp).Encode(map[string]any{
+		"status":       "completed",
+		"pagesCrawled": strconv.Itoa(int(pagesCrawled)),
+	})
+	// json.
+	// resp.Write([]byte("Crawl finished"))
 }
 
 func (s *Server) SearchCrawled(resp http.ResponseWriter, req *http.Request) {
