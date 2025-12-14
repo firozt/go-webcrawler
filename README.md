@@ -92,11 +92,11 @@ Starts a web crawl for the specified URL and stores the extracted pages in the d
 <details>
 <summary>GET /api/v1/search?q={query}&limit={limit}</summary>
 
-## Description
+### Description
 
 Searches through the database to find keywords within crawled web pages. Returns a list of URL’s and Title’s where the keyword appears.
 
-## HTTP Method & URL
+### HTTP Method & URL
 
 `GET /api/v1/search?q={query}&limit={limit}&domain={domain}`
 
@@ -110,7 +110,7 @@ Searches through the database to find keywords within crawled web pages. Returns
 
 
 
-## Example Response
+### Example Response
 
 ```json
   [
@@ -132,15 +132,15 @@ Searches through the database to find keywords within crawled web pages. Returns
 
 <details>
 <summary>GET /api/v1/health</summary>
-## Description
 
+### Description
 Displays server statistics and health. This endpoint of purely for logging reasons and threat detection.
 
-## HTTP Method & URL
+### HTTP Method & URL
 
 `GET /api/v1/health`
 
-## Example Response
+### Example Response
 
 ```json
 {
@@ -155,15 +155,15 @@ Displays server statistics and health. This endpoint of purely for logging reaso
 <details>
 <summary>GET /api/v1/*</summary>
 
-## Description
+### Description
 
 Catchall for unknown HTTP url request endpoints
 
-## HTTP Method & URL
+### HTTP Method & URL
 
 `GET /api/v1/*`
 
-## Example Response
+### Example Response
 
 ```json
 {
