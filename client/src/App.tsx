@@ -42,6 +42,11 @@ function App() {
   }, [isLightMode]);
 
   const handleSearch = () => {
+    setError("")
+    if (searchInput.length == 0){
+      setError("Input length cannot be zero. Please put atleast a single character")
+      return
+    }
     setLastPhrase(searchInput)
     const API_URL: string = `
     ${import.meta.env.VITE_API_DOMAIN}/api/${import.meta.env.VITE_API_VER}/search?q=${searchInput}&limit=10&domain=${urlInput}&domain=${urlInput}`
@@ -68,7 +73,7 @@ function App() {
       setSearchResults(groupPagesByUrl(parsedPageList))
     })
     .catch(err => {
-      alert("ERROR : " + err) 
+      setError("Server Error, please try again later.")
     })
   }
 
@@ -186,6 +191,7 @@ const getClosestWords = (keyword: string, largeText: string, windowSize = 20): s
             setVal={(newVal: string) => setSearchInput(newVal)}
             buttonText='Search'
             placeholder='keywords'
+            errored={error.length > 0}
             />
             <button onClick={() => setSearchMode(false)}>Back</button>
 
