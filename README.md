@@ -1,6 +1,8 @@
-# Table of Contents
-1. [Introduction](#webcrawler-indexer-and-webserver-in-go)
-2. [Functionality](#functionality)
+## Table of Contents
+1. [Introduction](#introduction)
+2. [Project Structure](#project-structure)
+   - [Server](#server)
+   - [Client](#client)
 3. [Tech Stack](#tech-stack)
    - [Frontend](#frontend-hosted-on-vercel)
    - [Backend](#backend-all-self-hosted)
@@ -8,32 +10,55 @@
    - [System Diagram of the Webcrawler](#system-diagram-of-the-webcrawler)
    - [Package Structure](#package-structure)
 5. [Endpoints](#endpoints)
-   - [POST /api/v1/crawl](#post-apiv1crawl)
-   - [GET /api/v1/search](#get-apiv1searchqquerylimitlimit)
+   - [POST /api/v1/crawl](#endpoints)
+   - [GET /api/v1/search](#endpoints)
+   - [GET /api/v1/health](#endpoints)
+   - [GET /api/v1/*](#endpoints)
 
 ---
 
-## Webcrawler, Indexer and WebServer in Go
+
+## Introduction
 This project contains a fully functional webcrawler and web server written in go, within the client directory, that saves all content to a SQLite database (wiped every 4 hours).
 The crawler is interactable via a webserver with two main endpoints (found below). The server directory contains a React Typescript Vite application that acts as a simple GUI to interact with the webcrawler backend
 
-## Functionality
-- Crawls a domain given a seed (initial url)
-- Search through keywords and recieve url
+## Project Structure
+
+### Server
+
+- `/server/`  
+  The server-side code and logic. Includes the backend server, webcrawler, and SQLite-related code.
+
+- `/server/cmd/webcrawler/`  
+  Entry point of the backend Go webcrawler and server.
+
+- `/server/internal/`  
+  Package root directory for the Go backend. Includes the server and webcrawler packages.
+
+- `/server/data/`  
+  Contains the SQLite database and `schema.sql` file to generate it.
+
+### Client
+
+- `/client/`  
+  Root of the Vite React application.
+
+- `/client/src/components/`  
+  Contains all custom React components.
+
 
 ## Tech Stack
 ### Frontend (Hosted on Vercel)
 - React
 - Typescript
 - Vite
-- Tailwind
 
 ### Backend (All Self Hosted)
-- GoLang (WebServer)
-- GoLang (WebCrawler)
+- Go Webserver package
+- Go Webcrawler package
 - SQLite Database
 
-# Implementation
+## Implementation
 ### System Diagram of the Webcrawler
 ![Diagram](images/diagram.png)
 <br>
@@ -92,11 +117,11 @@ Starts a web crawl for the specified URL and stores the extracted pages in the d
 <details>
 <summary>GET /api/v1/search?q={query}&limit={limit}</summary>
 
-## Description
+### Description
 
 Searches through the database to find keywords within crawled web pages. Returns a list of URL’s and Title’s where the keyword appears.
 
-## HTTP Method & URL
+### HTTP Method & URL
 
 `GET /api/v1/search?q={query}&limit={limit}&domain={domain}`
 
@@ -110,7 +135,7 @@ Searches through the database to find keywords within crawled web pages. Returns
 
 
 
-## Example Response
+### Example Response
 
 ```json
   [
@@ -132,15 +157,15 @@ Searches through the database to find keywords within crawled web pages. Returns
 
 <details>
 <summary>GET /api/v1/health</summary>
-## Description
 
+### Description
 Displays server statistics and health. This endpoint of purely for logging reasons and threat detection.
 
-## HTTP Method & URL
+### HTTP Method & URL
 
 `GET /api/v1/health`
 
-## Example Response
+### Example Response
 
 ```json
 {
@@ -155,15 +180,15 @@ Displays server statistics and health. This endpoint of purely for logging reaso
 <details>
 <summary>GET /api/v1/*</summary>
 
-## Description
+### Description
 
 Catchall for unknown HTTP url request endpoints
 
-## HTTP Method & URL
+### HTTP Method & URL
 
 `GET /api/v1/*`
 
-## Example Response
+### Example Response
 
 ```json
 {
