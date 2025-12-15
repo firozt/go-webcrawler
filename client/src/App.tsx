@@ -194,7 +194,9 @@ const getClosestWords = (keyword: string, largeText: string, windowSize = 20): s
             errored={error.length > 0}
             />
             <button onClick={() => setSearchMode(false)}>Back</button>
-
+          {
+            error.length > 0 && <Error message={error}/>
+          }
           </div>
           <div style={{width:"min(95%,1000px)", margin:"auto",display:"flex",flexDirection:"column",gap:"10px"}}>
             {
