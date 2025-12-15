@@ -73,7 +73,7 @@ function App() {
       setSearchResults(groupPagesByUrl(parsedPageList))
     })
     .catch(err => {
-      setError("Server Error, please try again later.")
+      setError("Server Error, please try again later.:"+ err)
     })
   }
 
