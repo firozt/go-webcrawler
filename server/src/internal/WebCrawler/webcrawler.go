@@ -184,6 +184,5 @@ func (c *WebCrawler) databaseInteractionWorker(wg *sync.WaitGroup, pageQueue cha
 // simple passthrough, sqlite does the heavy lifting here
 func (c *WebCrawler) SearchCrawled(phrase string, url string, limit int) []repository.Page {
 	pages := c.repo.SearchPages(phrase, parser.GetDomain(url), limit)
-	fmt.Printf("query returned %d number of rows", len(pages))
 	return pages
 }

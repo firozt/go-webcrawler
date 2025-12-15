@@ -15,12 +15,13 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var DEV_MODE = false
-
 func main() {
+	var DEV_MODE = false
 	// LOAD ENV
 	var err error = godotenv.Load()
-	if err == nil && os.Getenv("PORT") == "1" {
+
+	// load devmode if .env has it to 1 else false (even if no .env)
+	if err == nil && os.Getenv("DEVMODE") == "1" {
 		DEV_MODE = true
 	}
 
@@ -31,10 +32,11 @@ func main() {
 		"https://domainsearch.ramizabdulla.me/": true,
 		"https://domainsearch.ramizabdulla.me":  true,
 	}
+	HOSTNAME := "0.0.0.0"
 	if DEV_MODE {
-		allowedOrigins["http://localhost:5173"] = true
+		allowedOrigins["*"] = true
+		HOSTNAME = "127.0.0.1"
 	}
-	var HOSTNAME string = "0.0.0.0"
 	var PORT string = "8080"
 	var MAX_ADDED_LINKS_PER_PAGE uint8 = 255
 	var NUM_OF_WORKERS uint8 = 2
@@ -48,5 +50,4 @@ func main() {
 	server := server.NewServer(webcrawler, HOSTNAME, PORT, &allowedOrigins)                                            // creates webserver instance
 	server.Run()
 	println("APPLICATION TERMINATED")
-	// runs server
 }

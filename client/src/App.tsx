@@ -5,6 +5,7 @@ import Search from './components/Search'
 import Error from './components/Error'
 import axios, { type AxiosResponse } from 'axios'
 import Spinner from './components/Spinner'
+import Dropdown from './components/DropDown'
 
 type CrawlPostBody = {
   url: string
@@ -25,7 +26,7 @@ function App() {
   const [error, setError] = useState<string>('')
   const [isLightMode, setIsLightMode] = useState<boolean>(false) // light mode state
   const [searchMode, setSearchMode] = useState<boolean>(false) // determines what page to show
-  const [searchResults, setSearchResults] = useState<Page[]>([])
+  const [searchResults, setSearchResults] = useState<Page[][]>([])
   const [buttonClickable, setButtonClickable] = useState<boolean>(true)
   const [lastPhrase, setLastPhrase] = useState<string>('')
 
@@ -45,6 +46,7 @@ function App() {
     const API_URL: string = `
     ${import.meta.env.VITE_API_DOMAIN}/api/${import.meta.env.VITE_API_VER}/search?q=${searchInput}&limit=10&domain=${urlInput}&domain=${urlInput}`
     console.log(API_URL)
+
     axios.get(API_URL)
     .then((resp: AxiosResponse<Page[]>) => {
       // obtain data and parse it
@@ -63,14 +65,26 @@ function App() {
         })
       })
       
-      setSearchResults(parsedPageList)
+      setSearchResults(groupPagesByUrl(parsedPageList))
     })
     .catch(err => {
       alert("ERROR : " + err) 
     })
-
   }
 
+
+  const groupPagesByUrl = (pages: Page[]): Page[][] => {
+  const map = new Map<string, Page[]>();
+
+  for (const page of pages) {
+    if (!map.has(page.url)) {
+      map.set(page.url, []);
+    }
+    map.get(page.url)!.push(page);
+  }
+
+  return Array.from(map.values());
+}
   // checks if darkmode was set in local storage
   const checkDarkModeStorage = (): boolean => {
     try {
@@ -162,8 +176,7 @@ const getClosestWords = (keyword: string, largeText: string, windowSize = 20): s
   return (
     <div className={isLightMode ? 'lightmode' : ''}>
       <NavBar isLightMode={isLightMode} toggleLightMode={toggleLightMode}/>
-      
-      {
+      { 
         searchMode ?
         <div className='search-page'>
           <div style={{width:"fit-content",margin:"auto",marginBottom:"2rem",display:"flex",flexDirection:"row",gap:"10px"}}>
@@ -177,33 +190,17 @@ const getClosestWords = (keyword: string, largeText: string, windowSize = 20): s
             <button onClick={() => setSearchMode(false)}>Back</button>
 
           </div>
-          {
-          searchResults.map((page, idx) => {
-          // split content by keyword
-          const regex = new RegExp(`(${lastPhrase})`, "gi");
-          const parts = page.content.split(regex);
-          return (
-            <div className='page-result' key={`${idx}-${page.url}`}>
-              <h3>
-                <a href={page.url} target='_BLANK'>
-                  {page.title}
-                </a>
-              </h3>
-              <p>
-              {parts.map((part, i) =>
-              regex.test(part) ? (
-              <span key={i} style={{ backgroundColor: "#e2cdabff", color: "#242424", padding:'1px' }}>
-                {part}
-              </span>
-                ) : (
-                  part
+          <div style={{width:"min(95%,1000px)", margin:"auto",display:"flex",flexDirection:"column",gap:"10px"}}>
+            {
+              searchResults.map((pageGroup, idx) => {
+                return (
+                  <div key={idx}>
+                    <Dropdown isLightMode={isLightMode} title={pageGroup[0].title} content={pageGroup} highlightWord={lastPhrase}/>
+                  </div>
                 )
-                )}
-              </p>
-              </div>
-              );
-            })
-          }
+              })
+            }
+          </div>
         </div>        
         :
         <div className='initial-input-page'>

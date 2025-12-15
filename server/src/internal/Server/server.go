@@ -45,10 +45,12 @@ func NewServer(crawler *webcrawler.WebCrawler, hostname string, port string, all
 func (s *Server) MiddleWare(method string, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		originHeader := r.Header.Get("Origin")
+		// log attempt
+		fmt.Printf("Recieved: %s-%s\n", r.Method, r.URL)
 
 		// set CORS headers for all responses if origin exists
 		if originHeader != "" {
-			if !(*s.allowedOrigins)[originHeader] {
+			if !(*s.allowedOrigins)[originHeader] && !(*s.allowedOrigins)["*"] {
 				fmt.Println("Reqeust was blocked due to CORS")
 				w.Header().Set("Access-Control-Allow-Origin", originHeader)
 				http.Error(w, fmt.Sprintf("origin %s not allowed", originHeader), http.StatusMethodNotAllowed)
@@ -59,7 +61,7 @@ func (s *Server) MiddleWare(method string, next http.HandlerFunc) http.HandlerFu
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 		} else {
 			// for non-browser requests allow everything, maybe turn off?
-			w.Header().Set("Access-Control-Allow-Origin", "*")
+			// w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
 		// handle OPTIONS preflight
 		if r.Method == http.MethodOptions {
@@ -68,6 +70,7 @@ func (s *Server) MiddleWare(method string, next http.HandlerFunc) http.HandlerFu
 		}
 		// check method
 		if r.Method != method {
+			fmt.Println("Request dropped - wrong request method")
 			http.Error(w, fmt.Sprintf("method %s not allowed", r.Method), http.StatusMethodNotAllowed)
 			return
 		}
