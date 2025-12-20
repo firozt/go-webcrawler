@@ -86,7 +86,7 @@ const Page = ({urlInput, setUrlInput, setShowSearch}: Props) => {
           <Error message={error} />
       </div>
 			{
-        buttonClickable ? <Spinner subtext={`Crawling ${urlInput.split("/")[2]}`}/> : <div style={{height:"36px"}}></div>
+        !buttonClickable ? <Spinner subtext={`Crawling ${urlInput.split("/")[2]}`}/> : <div style={{height:"36px"}}></div>
 			}
 		</>
   )
