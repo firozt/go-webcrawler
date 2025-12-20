@@ -1,15 +1,16 @@
 ## Table of Contents
 1. [Introduction](#introduction)
-2. [Project Structure](#project-structure)
+2. [Demo Images](#demo-images)
+3. [Project Structure](#project-structure)
    - [Server](#server)
    - [Client](#client)
-3. [Tech Stack](#tech-stack)
+4. [Tech Stack](#tech-stack)
    - [Frontend](#frontend-hosted-on-vercel)
    - [Backend](#backend-all-self-hosted)
-4. [Implementation](#implementation)
+5. [Implementation](#implementation)
    - [System Diagram of the Webcrawler](#system-diagram-of-the-webcrawler)
    - [Package Structure](#package-structure)
-5. [Endpoints](#endpoints)
+6. [Endpoints](#endpoints)
    - [POST /api/v1/crawl](#endpoints)
    - [GET /api/v1/search](#endpoints)
    - [GET /api/v1/health](#endpoints)
@@ -21,6 +22,12 @@
 ## Introduction
 This project contains a fully functional webcrawler and web server written in go, within the client directory, that saves all content to a SQLite database (wiped every 4 hours).
 The crawler is interactable via a webserver with two main endpoints (found below). The server directory contains a React Typescript Vite application that acts as a simple GUI to interact with the webcrawler backend
+
+## Demo Images
+### Inital Page
+![demo](images/demo1)
+### Search Page
+![demo2](images/demo2)
 
 ## Project Structure
 
