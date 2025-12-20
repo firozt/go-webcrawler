@@ -25,9 +25,9 @@ The crawler is interactable via a webserver with two main endpoints (found below
 
 ## Demo Images
 ### Inital Page
-![demo](images/demo1)
+![demo](images/demo.png)
 ### Search Page
-![demo2](images/demo2)
+![demo2](images/demo2.png)
 
 ## Project Structure
 
