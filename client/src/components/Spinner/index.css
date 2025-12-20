@@ -1,7 +1,13 @@
+.lightmode .spinner {
+  border-top: 4px solid #242424;
+}
+
 .spinner-container {
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-direction: column;
+  gap: 5px;
   padding: 20px;
 }
 
@@ -11,6 +17,8 @@
   width: 36px;
   height: 36px;
   animation: spin 1s linear infinite;
+  border-top: 4px solid #a25757ff;
+
 }
 
 @keyframes spin {
