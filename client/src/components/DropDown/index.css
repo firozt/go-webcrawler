@@ -1,3 +1,16 @@
+.lightmode .dropdown {
+    border-color: black !important;
+    
+}
+
+.lightmode .header {
+    background-color: #e0e0e0 !important;
+}
+
+.lightmode .arrow {
+    filter: none;
+}
+
 .dropdown {
     width: 100%;
     max-width: 1000px;

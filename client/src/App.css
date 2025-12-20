@@ -48,35 +48,3 @@
   cursor: pointer;
 }
 
-/* search page */
-
-.search-page {
-
-  max-width: 1200px;
-  display: flex;
-  flex-direction: column;
-  align-items:flex-start;
-  width: 100%;
-  gap: 10px;
-  z-index: 1;
-  margin: auto;
-  margin-top: 2%;
-
-}
-
-.search-page  button{
-  background-color: white;
-  color: black;
-  padding: 5px;
-  padding-left: 15px;
-  padding-right: 15px;
-  border-radius: 10px;
-  border: 1px solid black;
-}
-
-.search-page  button:hover{
-  background-color: black;
-  color: white;
-  transition: all .15s;
-}
-

@@ -11,44 +11,49 @@ type Props = {
   title: string;
   content: Page[];
   highlightWord: string;
-  isLightMode: boolean;
 };
 
-const Index = ({ title, content = [], highlightWord, isLightMode }: Props) => {
+const SearchPage = ({ title, content = [], highlightWord }: Props) => {
   const [showDropDown, setShowDropDown] = useState<boolean>(false);
-  console.log(isLightMode)
-  return (
-    <div className='dropdown' style={{borderColor:`${isLightMode ? "black" : "#a1a1a1ff"}`}}>
 
-      <div className='header' onClick={() => setShowDropDown(prev => !prev)} style={{backgroundColor:`${isLightMode ? "#e0e0e0" : "#656464ff"}`}}>
-        <div className='button'>
+  return (
+    <div className="dropdown">
+      <div
+        className="header"
+        onClick={() => setShowDropDown(prev => !prev)}
+      >
+        <div className="button">
           <h3>{title}</h3>
-          <p id='entrycount'>{content.length} entries</p>
+          <p id="entrycount">{content.length} entries</p>
         </div>
-        <div>{showDropDown ? <p></p> : <img width={15} src={"/arrowdown.svg"} style={ !isLightMode ? {filter:"invert(100)"} : {}} />}</div>
+
+        <div>
+          {showDropDown ? null : (
+            <img
+              width={15}
+              src="/arrowdown.svg"
+              className="arrow"
+            />
+          )}
+        </div>
       </div>
+
       <div className={`dropdown-content ${showDropDown ? 'open' : ''}`}>
         {content.map((page, idx) => {
           const regex = new RegExp(`(${highlightWord})`, 'gi');
           const parts = page.content.split(regex);
+
           return (
-            <div className='page-result' key={`${idx}-${page.url}`}>
+            <div className="page-result" key={`${idx}-${page.url}`}>
               <h3>
-                <a href={page.url} target='_BLANK'>
+                <a href={page.url} target="_BLANK" rel="noreferrer">
                   {page.url}
                 </a>
               </h3>
               <p>
                 {parts.map((part, i) =>
                   regex.test(part) ? (
-                    <span
-                      key={i}
-                      style={{
-                        backgroundColor: '#e2cdabff',
-                        color: '#242424',
-                        padding: '1px',
-                      }}
-                    >
+                    <span key={i} className="highlight">
                       {part}
                     </span>
                   ) : (
@@ -64,4 +69,4 @@ const Index = ({ title, content = [], highlightWord, isLightMode }: Props) => {
   );
 };
 
-export default Index;
+export default SearchPage;
