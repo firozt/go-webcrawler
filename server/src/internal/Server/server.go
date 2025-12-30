@@ -83,6 +83,7 @@ func (s *Server) Run() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/v1/crawl", s.MiddleWare("POST", s.StartCrawl))
 	mux.HandleFunc("/api/v1/search", s.MiddleWare("GET", s.SearchCrawled))
+	mux.HandleFunc("/api/v1/graph", s.MiddleWare("GET", s.GetGraphData))
 	mux.HandleFunc("/api/v1/health", s.MiddleWare("GET", s.Health))
 	mux.HandleFunc("/", s.CatchAll)
 	fmt.Printf("Server listening to %v:%v\n", s.hostname, s.port)
@@ -185,6 +186,22 @@ func (s *Server) SearchCrawled(resp http.ResponseWriter, req *http.Request) {
 	// encode results as JSON
 	resp.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(resp).Encode(results); err != nil {
+		http.Error(resp, "failed to encode response", http.StatusInternalServerError)
+	}
+}
+
+func (s *Server) GetGraphData(resp http.ResponseWriter, req *http.Request) {
+	domain := req.URL.Query().Get("domain")
+
+	if domain == "" {
+		http.Error(resp, "wildcard domain not allowed", http.StatusBadRequest)
+		return
+	}
+
+	graph := s.crawler.GetGraphData(domain)
+
+	resp.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(resp).Encode(graph); err != nil {
 		http.Error(resp, "failed to encode response", http.StatusInternalServerError)
 	}
 }

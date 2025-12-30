@@ -45,9 +45,10 @@ func main() {
 	// starting everything
 	db := repository.InitDB() // creates db conn and obj
 	defer db.Close()
-	pagesRepo := repository.NewPagesRepository(db)                                                                     // creates pagesRepo API using DB
-	webcrawler := webcrawler.NewCrawler(pagesRepo, MAX_ADDED_LINKS_PER_PAGE, NUM_OF_WORKERS, MAX_UNIQUE_CRAWLED_PAGES) // crawls sites and saves to DB
-	server := server.NewServer(webcrawler, HOSTNAME, PORT, &allowedOrigins)                                            // creates webserver instance
+	pagesRepo := repository.NewPagesRepository(db)                                                                                // creates pagesRepo API using DB
+	graphRepo := repository.NewGraphRepository(db)                                                                                // creates graphRepo API using DB
+	webcrawler := webcrawler.NewCrawler(pagesRepo, graphRepo, MAX_ADDED_LINKS_PER_PAGE, NUM_OF_WORKERS, MAX_UNIQUE_CRAWLED_PAGES) // crawls sites and saves to DB
+	server := server.NewServer(webcrawler, HOSTNAME, PORT, &allowedOrigins)                                                       // creates webserver instance
 	server.Run()
 	println("APPLICATION TERMINATED")
 }

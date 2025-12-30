@@ -40,6 +40,10 @@ func createRelationshipsTable(db *sql.DB) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	_, _ = db.Exec(`
+		DELETE from pageNode;
+	`)
+
 	// creates links table (many to many)
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS pageLink(
@@ -51,6 +55,9 @@ func createRelationshipsTable(db *sql.DB) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	_, _ = db.Exec(`
+		DELETE from pageLink;
+	`)
 }
 
 func createPagesTable(db *sql.DB) {

@@ -14,6 +14,7 @@ import (
 
 type WebCrawler struct {
 	repo                     *repository.PagesRepository
+	graphRepo                *repository.GraphRepository
 	MAX_ADDED_LINKS_PER_PAGE uint8
 	MAX_UNIQUE_CRAWLED_PAGES uint64
 	NUM_OF_WORKERS           uint8
@@ -25,9 +26,10 @@ type FetchedWebData struct {
 	URL      string
 }
 
-func NewCrawler(repo *repository.PagesRepository, MAX_ADDED_LINKS_PER_PAGE uint8, NUM_OF_WORKERS uint8, MAX_UNIQUE_CRAWLED_PAGES uint64) *WebCrawler {
+func NewCrawler(repo *repository.PagesRepository, graphRepo *repository.GraphRepository, MAX_ADDED_LINKS_PER_PAGE uint8, NUM_OF_WORKERS uint8, MAX_UNIQUE_CRAWLED_PAGES uint64) *WebCrawler {
 	return &WebCrawler{
 		repo:                     repo,
+		graphRepo:                graphRepo,
 		MAX_ADDED_LINKS_PER_PAGE: MAX_ADDED_LINKS_PER_PAGE,
 		NUM_OF_WORKERS:           NUM_OF_WORKERS,
 		MAX_UNIQUE_CRAWLED_PAGES: MAX_UNIQUE_CRAWLED_PAGES,
@@ -123,6 +125,8 @@ func (c *WebCrawler) parserWorker(workerId uint8, seenUrlCache *sync.Map, wg *sy
 	defer wg.Done()
 
 	for fetchedData := range toParseQueue {
+		c.graphRepo.InsertPageNode(fetchedData.URL)
+
 		fmt.Printf("parser-%d: acquired fetchedData\n", workerId)
 
 		textData, links, title, err := parser.GetTextAndLinks(fetchedData.HTMLBody, fetchedData.Domain)
@@ -157,6 +161,9 @@ func (c *WebCrawler) parserWorker(workerId uint8, seenUrlCache *sync.Map, wg *sy
 			_, seen := seenUrlCache.LoadOrStore(link, true)
 			// is seen ignore
 			if !seen && atomic.LoadUint64(numCrawledPages)+uint64(atomic.LoadInt64(pending)) < c.MAX_UNIQUE_CRAWLED_PAGES {
+				// add new valids
+				c.graphRepo.InsertPageNode(link)                  // add this node
+				c.graphRepo.InsertPageEdge(fetchedData.URL, link) // add edge
 				successfullAdds++
 				atomic.AddInt64(pending, 1)
 				urlQueue <- link
@@ -185,4 +192,9 @@ func (c *WebCrawler) databaseInteractionWorker(wg *sync.WaitGroup, pageQueue cha
 func (c *WebCrawler) SearchCrawled(phrase string, url string, limit int) []repository.Page {
 	pages := c.repo.SearchPages(phrase, parser.GetDomain(url), limit)
 	return pages
+}
+
+func (c *WebCrawler) GetGraphData(url string) repository.LinkGraph {
+	graph := c.graphRepo.GetAllLinkRelations(parser.GetDomain(url))
+	return *graph
 }
