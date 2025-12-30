@@ -22,8 +22,40 @@ func InitDB() *sql.DB {
 		log.Fatal(err)
 	}
 
-	// creates FTS5 table
+	createPagesTable(db)
+	createRelationshipsTable(db)
+
+	return db
+}
+
+func createRelationshipsTable(db *sql.DB) {
+	// creates node table
+	_, err := db.Exec(`
+		CREATE TABLE IF NOT EXISTS pageNode(
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			url TEXT
+		)
+	`)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	// creates links table (many to many)
 	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS pageLink(
+			from_id INTEGER,
+			to_id INTEGER
+		)
+	`)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func createPagesTable(db *sql.DB) {
+	// creates FTS5 table
+	_, err := db.Exec(`
         CREATE VIRTUAL TABLE IF NOT EXISTS pages USING fts5(
             url,
             title,
@@ -33,6 +65,7 @@ func InitDB() *sql.DB {
         )
     `)
 
+	// removes pre existing (if exists)
 	_, _ = db.Exec(`
 		DELETE from pages;
 	`)
@@ -41,5 +74,4 @@ func InitDB() *sql.DB {
 		log.Fatal(err)
 	}
 
-	return db
 }
