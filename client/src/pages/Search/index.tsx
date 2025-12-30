@@ -4,6 +4,7 @@ import axios, { type AxiosResponse } from 'axios'
 import Dropdown from '../../components/DropDown'
 import Error from '../../components/Error'
 import Search from '../../components/Search'
+import RelationshipGraph from '../../components/RelationshipGraph'
 
 type Props = {
 	urlInput: string
@@ -104,6 +105,7 @@ const getClosestWords = (keyword: string, largeText: string, windowSize = 20): s
 
   return (
 		<>
+    <RelationshipGraph url={urlInput}/>
 		<div className='search-page'>
           <div style={{width:"fit-content",margin:"auto",marginBottom:"2rem",display:"flex",flexDirection:"row",gap:"10px"}}>
             <Search
@@ -130,7 +132,7 @@ const getClosestWords = (keyword: string, largeText: string, windowSize = 20): s
               })
             }
           </div>
-        </div>        
+        </div>  
 		</>
   )
 }

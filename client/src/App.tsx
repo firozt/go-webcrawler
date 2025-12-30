@@ -4,7 +4,6 @@ import NavBar from './components/NavBar'
 import Error from './components/Error'
 import Home from './pages/Home'
 import SearchPage from './pages/Search'
-import RelationshipGraph from './components/RelationshipGraph'
 
 function App() {
   const [urlInput, setUrlInput] = useState<string>('')
@@ -60,7 +59,6 @@ function App() {
           urlInput={urlInput}
           toggleShowSearch={() => setShowSearch(prev => !prev)}
           />
-          <RelationshipGraph/>
         </>
         :
         <Home

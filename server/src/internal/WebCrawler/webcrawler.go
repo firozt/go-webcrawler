@@ -68,7 +68,7 @@ func (c *WebCrawler) StartCrawl(seedURL string, allowExternal bool) (uint64, err
 		wg.Add(1)
 		go c.fetcherWorker(i, &wg, urlQueue, toParseQueue, &pending, &numCrawledPages)
 	}
-
+	c.graphRepo.InsertPageNode(seedURL, "NO_TITLE")
 	// start parser work pool
 	for i := uint8(0); i < c.NUM_OF_WORKERS; i++ {
 		wg.Add(1)
@@ -125,11 +125,18 @@ func (c *WebCrawler) parserWorker(workerId uint8, seenUrlCache *sync.Map, wg *sy
 	defer wg.Done()
 
 	for fetchedData := range toParseQueue {
-		c.graphRepo.InsertPageNode(fetchedData.URL)
 
 		fmt.Printf("parser-%d: acquired fetchedData\n", workerId)
 
 		textData, links, title, err := parser.GetTextAndLinks(fetchedData.HTMLBody, fetchedData.Domain)
+		if title == "" {
+			split := strings.Split(fetchedData.URL, "/")
+			lastResource := split[len(split)-1]
+			c.graphRepo.AlterPageNodeTitle(fetchedData.URL, strings.ReplaceAll(lastResource, "%20", " ")) // file resource instead
+		} else {
+			c.graphRepo.AlterPageNodeTitle(fetchedData.URL, title) // update with new title
+		}
+
 		if err != nil {
 			fmt.Printf("--parser-%d: Could not get text and links from html. dropping \n", workerId)
 			atomic.AddInt64(pending, -1)
@@ -162,7 +169,7 @@ func (c *WebCrawler) parserWorker(workerId uint8, seenUrlCache *sync.Map, wg *sy
 			// is seen ignore
 			if !seen && atomic.LoadUint64(numCrawledPages)+uint64(atomic.LoadInt64(pending)) < c.MAX_UNIQUE_CRAWLED_PAGES {
 				// add new valids
-				c.graphRepo.InsertPageNode(link)                  // add this node
+				c.graphRepo.InsertPageNode(link, "")              // add node (no name for now)
 				c.graphRepo.InsertPageEdge(fetchedData.URL, link) // add edge
 				successfullAdds++
 				atomic.AddInt64(pending, 1)

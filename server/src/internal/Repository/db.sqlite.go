@@ -33,6 +33,7 @@ func createRelationshipsTable(db *sql.DB) {
 	_, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS pageNode(
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			title TEXT,
 			url TEXT
 		)
 	`)

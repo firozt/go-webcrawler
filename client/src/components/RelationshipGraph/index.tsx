@@ -1,33 +1,66 @@
 import { GraphCanvas } from 'reagraph';
-import './index.css'
+import './index.css';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 
-type Props = {}
-
-const RelationshipGraph = (props: Props) => {
-  return (
-    <div className='relationship-graph'>
-      <GraphCanvas
-      nodes={[
-        {
-          id: 'n-1',
-          label: '1'
-        },
-        {
-          id: 'n-2',
-          label: '2'
-        }
-      ]}
-      edges={[
-        {
-          id: '1->2',
-          source: 'n-1',
-          target: 'n-2',
-          label: 'Edge 1-2'
-        }
-      ]}
-    />
-    </div>
-);
+// represents node table
+interface PageNode {
+  id: number;   
+  url: string;
+  title: string
 }
 
-export default RelationshipGraph
+// represent many-to-many relationship between pages
+interface PageEdge {
+  from_id: number; // match JSON keys exactly
+  to_id: number;
+}
+
+// combines edges and nodes to create a graph object
+interface LinkGraph {
+  nodes: PageNode[];
+  edges: PageEdge[];
+}
+
+type Props = {
+  url: string;
+};
+
+const RelationshipGraph = ({ url }: Props) => {
+  const [data, setData] = useState<LinkGraph | null>(null);
+
+  useEffect(() => {
+    const API_URL = `${import.meta.env.VITE_API_DOMAIN}/api/${import.meta.env.VITE_API_VER}/graph?domain=${url}`;
+    console.log("graph URL:", API_URL);
+
+    axios.get(API_URL)
+      .then(res => setData(res.data))
+      .catch(err => console.error(err));
+  }, [url]);
+
+  if (!data) return null;
+
+  // map nodes for GraphCanvas
+  const nodes = data.nodes.map(n => ({
+    id: String(n.id),
+    label: n.title,
+  }));
+
+  // map edges for GraphCanvas
+  const edges = data.edges.map(e => ({
+    id: `${e.from_id}->${e.to_id}`,
+    source: String(e.from_id),
+    target: String(e.to_id),
+  }));
+
+  return (
+    <div className="relationship-graph">
+      <GraphCanvas 
+        nodes={nodes}
+        edges={edges}
+      />
+    </div>
+  );
+};
+
+export default RelationshipGraph;

@@ -7,8 +7,9 @@ import (
 
 // represents node table
 type PageNode struct {
-	ID  uint64 `json:"id"`
-	URL string `json:"url"`
+	ID    uint64 `json:"id"`
+	URL   string `json:"url"`
+	Title string `json:"title"`
 }
 
 // represent many to many relationship between pages
@@ -33,11 +34,11 @@ func NewGraphRepository(db *sql.DB) *GraphRepository {
 	return &GraphRepository{db: db}
 }
 
-func (repo GraphRepository) InsertPageNode(url string) {
+func (repo GraphRepository) InsertPageNode(url string, title string) {
 	_, err := repo.db.Exec(`
-		INSERT into pageNode(url) 
-		VALUES (?)
-	`, url)
+        INSERT INTO pageNode(url, title)
+        VALUES (?, ?)
+    `, url, title)
 
 	if err != nil {
 		log.Fatal(err)
@@ -74,11 +75,24 @@ func (repo GraphRepository) InsertPageEdge(fromURL string, toURL string) {
 		log.Fatal(err)
 	}
 }
+func (repo GraphRepository) AlterPageNodeTitle(url string, title string) {
+	id := repo.GetIDFromURL(url)
+
+	_, err := repo.db.Exec(`
+        UPDATE pageNode
+        SET title = ?
+        WHERE id = ?;
+    `, title, id)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 
 func (repo GraphRepository) GetAllLinkRelations(domain string) *LinkGraph {
 	domainPattern := "%" + domain + "%"
 	rows, err := repo.db.Query(`
-		SELECT l.id, l.url, r.id, r.url
+		SELECT l.id, l.title , l.url, r.id, r.title , r.url
 		FROM pageLink
 		JOIN pageNode AS l ON l.id = pageLink.from_id
 		JOIN pageNode AS r ON r.id = pageLink.to_id
@@ -96,19 +110,19 @@ func (repo GraphRepository) GetAllLinkRelations(domain string) *LinkGraph {
 
 	for rows.Next() {
 		var fromID, toID uint64
-		var fromURL, toURL string
-		if err := rows.Scan(&fromID, &fromURL, &toID, &toURL); err != nil {
+		var fromURL, toURL, fromTitle, toTitle string
+		if err := rows.Scan(&fromID, &fromTitle, &fromURL, &toID, &toTitle, &toURL); err != nil {
 			log.Fatal(err)
 		}
 
 		graph.Edges = append(graph.Edges, PageEdge{FromID: fromID, ToID: toID})
 
 		if _, exists := seen[fromURL]; !exists {
-			nodes = append(nodes, PageNode{ID: fromID, URL: fromURL})
+			nodes = append(nodes, PageNode{ID: fromID, URL: fromURL, Title: fromTitle})
 			seen[fromURL] = true
 		}
 		if _, exists := seen[toURL]; !exists {
-			nodes = append(nodes, PageNode{ID: toID, URL: toURL})
+			nodes = append(nodes, PageNode{ID: toID, URL: toURL, Title: toTitle})
 			seen[toURL] = true
 		}
 	}
