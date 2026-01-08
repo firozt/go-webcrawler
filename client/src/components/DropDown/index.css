@@ -16,7 +16,7 @@
     max-width: 1000px;
     min-width: 350px;
     margin: auto;
-    border: 1px solid black;
+    border: 1px solid rgb(97, 97, 97);
 }
 
 .dropdown #entrycount {
@@ -32,6 +32,7 @@
     flex-direction: row;
     justify-content: space-between;
     gap: 10px;
+    background-color: rgb(97, 97, 97);
 }
 
 .dropdown .button {
@@ -68,4 +69,11 @@
     max-height: 500px;
     overflow: scroll;
     transform: scaleY(1);
+}
+
+.highlight {
+    background-color: rgba(255, 255, 0, 0.19);
+    padding: 2px;
+    padding-left: 4px;
+    padding-right: 4px;
 }

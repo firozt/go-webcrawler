@@ -121,7 +121,7 @@ const getClosestWords = (keyword: string, largeText: string, windowSize = 20): s
             error.length > 0 && <Error message={error}/>
           }
           </div>
-          <div style={{width:"min(95%,1000px)", margin:"auto",display:"flex",flexDirection:"column",gap:"10px"}}>
+          <div style={{width:"min(95%,1000px)", margin:"auto",display:"flex",flexDirection:"column",gap:"10px", marginBottom:"2rem"}}>
             {
               searchResults.map((pageGroup, idx) => {
                 return (
