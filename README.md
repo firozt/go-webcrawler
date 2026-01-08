@@ -210,6 +210,57 @@ Catchall for unknown HTTP url request endpoints
 
 </details>
 
+<details>
+<summary>GET /api/v1/graph?domain={domain}</summary>
+
+### Description
+
+Returns a graphical object represented in JSON that describes how the
+crawled pages relate to each other. Note that the domain can be any url
+on that domain the server will automatically trim only the domain section.
+
+### HTTP Method & URL
+
+`GET /api/v1/graph?domain={domain}`
+
+
+### Query Parameters
+
+| Parameter | Type   | Required | Description                                       |
+| --------- | ------ | -------- | ------------------------------------------------- |
+| domain    | string | yes      | Domains to search for (wild card "" is invalid)   |
+
+
+
+### Example Response
+
+```json
+{
+  "nodes": [
+    {
+      "id": 1,
+      "url": "https://example.com",
+      "title": "Home"
+    },
+    {
+      "id": 2,
+      "url": "https://example.com/about",
+      "title": "About"
+    }
+  ],
+  "edges": [
+    {
+      "from_id": 1,
+      "to_id": 2
+    }
+  ]
+}
+
+```
+
+</details>
+
+
 
 ---
 
