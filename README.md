@@ -60,7 +60,7 @@ The crawler is interactable via a webserver with two main endpoints (found below
 - Typescript
 - Vite
 
-### Backend (All Self Hosted)
+### Backend (all self hosted, containerized on an ubuntu server machine)
 - Go Webserver package
 - Go Webcrawler package
 - SQLite Database
