@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 )
 
@@ -35,6 +36,11 @@ func NewGraphRepository(db *sql.DB) *GraphRepository {
 }
 
 func (repo GraphRepository) InsertPageNode(url string, title string) {
+	// prevents duplicate url (candidate key)
+	if repo.isRowExist(url) {
+		fmt.Printf("--stopping insert (duplicate) for %s\n", url)
+		return
+	}
 	_, err := repo.db.Exec(`
         INSERT INTO pageNode(url, title)
         VALUES (?, ?)
@@ -43,6 +49,19 @@ func (repo GraphRepository) InsertPageNode(url string, title string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func (repo GraphRepository) isRowExist(url string) bool {
+	var count uint16
+	err := repo.db.QueryRow(`
+		SELECT count(*) FROM pageNode
+		WHERE url = ?
+	`, url).Scan(&count)
+	if err != nil {
+		return false
+	}
+
+	return count > 0
 }
 
 func (repo GraphRepository) GetIDFromURL(url string) uint64 {
@@ -54,7 +73,7 @@ func (repo GraphRepository) GetIDFromURL(url string) uint64 {
     `, url).Scan(&res)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			log.Fatalf("from URL not found: %s", url)
+			log.Fatal("No rows matched")
 		}
 		log.Fatal(err)
 	}
@@ -72,7 +91,7 @@ func (repo GraphRepository) InsertPageEdge(fromURL string, toURL string) {
         VALUES (?, ?)
     `, fromID, toID)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Unable to insert new page to graph database - ", err)
 	}
 }
 func (repo GraphRepository) AlterPageNodeTitle(url string, title string) {
@@ -85,7 +104,8 @@ func (repo GraphRepository) AlterPageNodeTitle(url string, title string) {
     `, title, id)
 
 	if err != nil {
-		log.Fatal(err)
+
+		log.Fatal("Attempting to alter a non existing page node - ", err)
 	}
 }
 
