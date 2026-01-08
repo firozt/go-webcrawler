@@ -1,4 +1,4 @@
-import { darkTheme, GraphCanvas, lightTheme, type InternalGraphNode } from 'reagraph';
+import { GraphCanvas, type InternalGraphNode } from 'reagraph';
 import './index.css';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
@@ -69,7 +69,6 @@ const RelationshipGraph = ({ url }: Props) => {
         edges={edges}
         onNodeClick={(node: InternalGraphNode) =>handleNodeClick(node)}
         draggable
-        theme={lightTheme}
       />
     </div>
   );
