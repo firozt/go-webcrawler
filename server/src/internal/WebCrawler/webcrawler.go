@@ -103,7 +103,6 @@ func (c *WebCrawler) fetcherWorker(workerId uint8, wg *sync.WaitGroup, urlQueue 
 
 	for url := range urlQueue {
 		fmt.Printf("fetcher-%d: acquired url: %s\n", workerId, url)
-
 		htmlBody, err := parser.ParseSite(url)
 		if err != nil {
 			fmt.Printf("--fetcher-%d couldnt parse URL, dropping - err: %s\n", workerId, err)
@@ -166,8 +165,9 @@ func (c *WebCrawler) parserWorker(workerId uint8, seenUrlCache *sync.Map, wg *sy
 				break
 			}
 			_, seen := seenUrlCache.LoadOrStore(link, true)
+
 			// is seen ignore
-			if !seen && atomic.LoadUint64(numCrawledPages)+uint64(atomic.LoadInt64(pending)) < c.MAX_UNIQUE_CRAWLED_PAGES {
+			if (!seen && !c.graphRepo.IsRowExist(link)) && atomic.LoadUint64(numCrawledPages)+uint64(atomic.LoadInt64(pending)) < c.MAX_UNIQUE_CRAWLED_PAGES {
 				// add new valids
 				c.graphRepo.InsertPageNode(link, "")              // add node (no name for now)
 				c.graphRepo.InsertPageEdge(fetchedData.URL, link) // add edge

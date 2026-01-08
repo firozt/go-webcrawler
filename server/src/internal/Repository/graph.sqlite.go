@@ -37,7 +37,7 @@ func NewGraphRepository(db *sql.DB) *GraphRepository {
 
 func (repo GraphRepository) InsertPageNode(url string, title string) {
 	// prevents duplicate url (candidate key)
-	if repo.isRowExist(url) {
+	if repo.IsRowExist(url) {
 		fmt.Printf("--stopping insert (duplicate) for %s\n", url)
 		return
 	}
@@ -51,7 +51,7 @@ func (repo GraphRepository) InsertPageNode(url string, title string) {
 	}
 }
 
-func (repo GraphRepository) isRowExist(url string) bool {
+func (repo GraphRepository) IsRowExist(url string) bool {
 	var count uint16
 	err := repo.db.QueryRow(`
 		SELECT count(*) FROM pageNode
