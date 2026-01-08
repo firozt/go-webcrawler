@@ -1,4 +1,4 @@
-import { GraphCanvas } from 'reagraph';
+import { GraphCanvas, type InternalGraphNode } from 'reagraph';
 import './index.css';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
@@ -53,11 +53,22 @@ const RelationshipGraph = ({ url }: Props) => {
     target: String(e.to_id),
   }));
 
+  const handleNodeClick = (node: InternalGraphNode) => {
+    if (!data) return
+
+    const res = data.nodes.find(o => o.id === Number(node.id))
+    if (!res?.url) return
+
+    window.open(res.url, '_blank')?.focus()
+  }
+
   return (
     <div className="relationship-graph">
       <GraphCanvas 
         nodes={nodes}
         edges={edges}
+        onNodeClick={(node: InternalGraphNode) =>handleNodeClick(node)}
+        draggable
       />
     </div>
   );
