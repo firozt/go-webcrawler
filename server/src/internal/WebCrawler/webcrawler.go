@@ -175,6 +175,7 @@ func (c *WebCrawler) parserWorker(workerId uint8, seenUrlCache *sync.Map, wg *sy
 				atomic.AddInt64(pending, 1)
 				urlQueue <- link
 			}
+
 		}
 
 		// finished processing this page and adding all links
