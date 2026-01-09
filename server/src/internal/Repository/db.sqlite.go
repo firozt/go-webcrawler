@@ -9,6 +9,8 @@ package repository
 import (
 	"database/sql"
 	"log"
+	"path/filepath"
+	"testing"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -20,6 +22,22 @@ func InitDB() *sql.DB {
 	db, err := sql.Open("sqlite3", PATH_TO_DB)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	createPagesTable(db)
+	createRelationshipsTable(db)
+
+	return db
+}
+
+func InitTestDB(t *testing.T) *sql.DB {
+	t.Helper()
+
+	dbPath := filepath.Join(t.TempDir(), "test.sqlite")
+
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		t.Fatalf("Unable to create test db - %d", err)
 	}
 
 	createPagesTable(db)
@@ -81,5 +99,4 @@ func createPagesTable(db *sql.DB) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 }

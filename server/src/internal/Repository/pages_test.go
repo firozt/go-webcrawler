@@ -1,33 +1,13 @@
 package repository
 
 import (
-	"database/sql"
 	"testing"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// starts in memory DB for testing
-func setupTestDB(t *testing.T) *sql.DB {
-	db, err := sql.Open("sqlite3", ":memory:")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	_, err = db.Exec(`
-		CREATE VIRTUAL TABLE pages USING fts5(
-			url, title, content, crawled_at
-		)
-	`)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	return db
-}
-
 func TestInsertPageFTS5(t *testing.T) {
-	db := setupTestDB(t)
+	db := InitTestDB(t)
 	defer db.Close()
 
 	repo := NewPagesRepository(db)
@@ -43,7 +23,7 @@ func TestInsertPageFTS5(t *testing.T) {
 	}
 
 	var url, title, content, crawledAt string
-	err = db.QueryRow(`SELECT url, title, content, crawled_at FROM pages WHERE url = ?`, page.URL).
+	err = repo.db.QueryRow(`SELECT url, title, content, crawled_at FROM pages WHERE url = ?`, page.URL).
 		Scan(&url, &title, &content, &crawledAt)
 	if err != nil {
 		t.Fatalf("failed to query inserted page: %v", err)
@@ -55,8 +35,7 @@ func TestInsertPageFTS5(t *testing.T) {
 }
 
 func TestSearchPages(t *testing.T) {
-	db := InitDB()
-	defer db.Close()
+	db := InitTestDB(t)
 
 	repo := NewPagesRepository(db)
 
@@ -84,8 +63,7 @@ func TestSearchPages(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		t.Run("Test "+tc.query, func(t *testing.T) {
-			t.Parallel()
+		t.Run("Test_keyword_'"+tc.query+"'", func(t *testing.T) {
 			res := repo.SearchPages(tc.query, "", 10)
 
 			if len(res) != tc.expected {
@@ -94,4 +72,5 @@ func TestSearchPages(t *testing.T) {
 			}
 		})
 	}
+	db.Close()
 }

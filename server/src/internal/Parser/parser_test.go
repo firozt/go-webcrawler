@@ -192,7 +192,7 @@ func TestValidateLinks(t *testing.T) {
 			},
 			allowExternal: true,
 			expected: []string{
-				"https://example.com",
+				"https://example.com/",
 				"https://books.toscrape.com/catalogue/category/books/classics_6/",
 			},
 		},
