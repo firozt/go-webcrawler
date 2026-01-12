@@ -27,7 +27,6 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > $HOME/.ssh/deploy_key
           chmod 600 $HOME/.ssh/deploy_key
 
-
       - name: Cloudflared SSH + Deploy
         uses: and-fm/cloudflared-ssh-action@v3.1.2
         with:
@@ -38,7 +37,6 @@ jobs:
           port: 22
           service_token_id: ${{ secrets.SERVICE_CLIENT_ID }}
           service_token_secret: ${{ secrets.SERVICE_CLIENT_SECRET }}
-          login_flags: "--token ${{ secrets.SERVICE_CLIENT_SECRET }}"
           commands: |
             cd /home/miz/dev/self-host/go-webcrawler
             git pull
