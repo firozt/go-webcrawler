@@ -29,8 +29,8 @@ jobs:
           private_key_filename: id_ed25519_cf
           private_key_value: ${{ secrets.SSH_PRIVATE_KEY_VALUE }}
           port: 22
-          # service_token_id: ${{ secrets.SERVICE_TOKEN_ID }}
-
+          service_token_id: ${{ secrets.SERVICE_CLIENT_ID }}
+          service_token_secret: ${{ secrets.SERVICE_CLIENT_SECRET }}
           commands: cd /home/miz/dev/self-host/go-webcrawler
             git pull
             docker compose up -d --build domainsearch_api
