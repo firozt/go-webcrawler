@@ -21,17 +21,20 @@ jobs:
       - name: Run tests
         working-directory: ./server
         run:  go test -tags "fts5" -v ./...
-      - name: SSH into server and deploy
+        
+      - name: Write SSH key to file
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+      - name: Cloudflared SSH Deplot
         uses: and-fm/cloudflared-ssh-action@v3.1.2
         with:
-          host: ssh.ramizabdulla.me
+          hostname: ssh.ramizabdulla.me
           username: miz
-          private_key_filename: id_ed25519_cf
-          private_key_value: ${{ secrets.SSH_PRIVATE_KEY_VALUE }}
-          port: 22
-          service_token_id: ${{ secrets.SERVICE_CLIENT_ID }}
-          service_token_secret: ${{ secrets.SERVICE_CLIENT_SECRET }}
-          commands: cd /home/miz/dev/self-host/go-webcrawler
+          private_key_filename: ~/.ssh/deploy_key
+          command: |
+            cd /home/miz/dev/self-host/go-webcrawler
             git pull
             docker compose up -d --build domainsearch_api
-             
