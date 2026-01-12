@@ -7,26 +7,25 @@ on:
     branches: [ "main" ]
 
 jobs:
-  test:
+  test_and_deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.25.4' 
-
-      - name: Run tests
+          go-version: '1.25.4'
+      
+      - name: Run Go tests
         working-directory: ./server
         run: go test -tags "fts5" -v ./...
-
+      
       - name: Write SSH key to file
         run: |
-          mkdir -p /root/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /root/.ssh/deploy_key
-          chmod 600 /root/.ssh/deploy_key
+          mkdir -p $HOME/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > $HOME/.ssh/deploy_key
+          chmod 600 $HOME/.ssh/deploy_key
 
       - name: Cloudflared SSH Run Remote Commands
         uses: and-fm/cloudflared-ssh-action@v3.1.2
