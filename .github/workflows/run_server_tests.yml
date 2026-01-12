@@ -43,4 +43,3 @@ jobs:
             cd /home/miz/dev/self-host/go-webcrawler
             git pull
             docker compose up -d --build domainsearch_api
-
