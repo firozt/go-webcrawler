@@ -37,6 +37,7 @@ jobs:
           port: 22
           service_token_id: ${{ secrets.SERVICE_CLIENT_ID }}
           service_token_secret: ${{ secrets.SERVICE_CLIENT_SECRET }}
+          login_flags: "--token ${{ secrets.SERVICE_CLIENT_SECRET }}"
           commands: |
             cd /home/miz/dev/self-host/go-webcrawler
             git pull
