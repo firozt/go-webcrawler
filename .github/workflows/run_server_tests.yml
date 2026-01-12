@@ -21,14 +21,17 @@ jobs:
       - name: Run tests
         working-directory: ./server
         run:  go test -tags "fts5" -v ./...
-      - name: Cloudflared SSH Run Remote Commands
+      - name: SSH into server and deploy
         uses: and-fm/cloudflared-ssh-action@v3.1.2
         with:
-          hostname: ssh.ramizabdulla.me
+          host: ssh.ramizabdulla.me
           username: miz
-          private_key: ${{ secrets.SSH_PRIVATE_KEY }}
-          command: |
-            cd /home/miz/dev/self-host/go-webcrawler
+          # private_key_filename: ${{ secrets.SSH_PRIVATE_KEY_FILENAME }}
+          private_key_value: ${{ secrets.SSH_PRIVATE_KEY_VALUE }}
+          port: 22
+          # service_token_id: ${{ secrets.SERVICE_TOKEN_ID }}
+          # service_token_secret: ${{ secrets.SERVICE_TOKEN_SECRET }}
+          commands: cd /home/miz/dev/self-host/go-webcrawler
             git pull
             docker compose up -d --build domainsearch_api
              
