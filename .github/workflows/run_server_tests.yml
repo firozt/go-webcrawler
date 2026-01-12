@@ -24,17 +24,18 @@ jobs:
         
       - name: Write SSH key to file
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-
-      - name: Cloudflared SSH Deplot
+          mkdir -p /home/runner/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /home/runner/.ssh/deploy_key
+          chmod 600 /home/runner/.ssh/deploy_key
+      
+      - name: Cloudflared SSH Run Remote Commands
         uses: and-fm/cloudflared-ssh-action@v3.1.2
         with:
           hostname: ssh.ramizabdulla.me
           username: miz
-          private_key_filename: ~/.ssh/deploy_key
+          private_key_filename: /home/runner/.ssh/deploy_key
           command: |
             cd /home/miz/dev/self-host/go-webcrawler
             git pull
             docker compose up -d --build domainsearch_api
+
