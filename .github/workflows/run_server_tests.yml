@@ -21,3 +21,14 @@ jobs:
       - name: Run tests
         working-directory: ./server
         run:  go test -tags "fts5" -v ./...
+      - name: Cloudflared SSH Run Remote Commands
+        uses: and-fm/cloudflared-ssh-action@v3.1.2
+        with:
+          hostname: ssh.ramizabdulla.me
+          username: miz
+          private_key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command: |
+            cd /home/miz/dev/self-host/go-webcrawler
+            git pull
+            docker compose up -d --build domainsearch_api
+             
