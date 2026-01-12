@@ -21,7 +21,7 @@ jobs:
         working-directory: ./server
         run: go test -tags "fts5" -v ./...
       
-      - name: Write SSH key 
+      - name: Write SSH key
         run: |
           mkdir -p $HOME/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > $HOME/.ssh/deploy_key
