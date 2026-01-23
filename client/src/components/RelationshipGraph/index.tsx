@@ -30,7 +30,7 @@ const RelationshipGraph = ({ url }: Props) => {
   const [data, setData] = useState<LinkGraph | null>(null);
 
   useEffect(() => {
-    const API_URL = `${import.meta.env.VITE_API_DOMAIN}/api/${import.meta.env.VITE_API_VER}/graph?domain=${url}`;
+    const API_URL = `${import.meta.env.VITE_API_DOMAIN}/${import.meta.env.VITE_API_VER}/graph?domain=${url}`;
     console.log("graph URL:", API_URL);
 
     axios.get(API_URL)
