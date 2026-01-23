@@ -33,7 +33,7 @@ const SearchPage = ({urlInput,toggleShowSearch}: Props) => {
     }
     setLastPhrase(searchInput)
     const API_URL: string = `
-    ${import.meta.env.VITE_API_DOMAIN}/api/${import.meta.env.VITE_API_VER}/search?q=${searchInput}&limit=10&domain=${urlInput}&domain=${urlInput}`
+    ${import.meta.env.VITE_API_DOMAIN}/${import.meta.env.VITE_API_VER}/search?q=${searchInput}&limit=10&domain=${urlInput}&domain=${urlInput}`
     console.log(API_URL)
 
     axios.get(API_URL)
