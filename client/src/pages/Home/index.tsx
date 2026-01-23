@@ -38,7 +38,7 @@ const Page = ({urlInput, setUrlInput, setShowSearch}: Props) => {
       return
     }
 
-    const API_URL: string = `${import.meta.env.VITE_API_DOMAIN}/api/${import.meta.env.VITE_API_VER}/crawl`
+    const API_URL: string = `${import.meta.env.VITE_API_DOMAIN}/${import.meta.env.VITE_API_VER}/crawl`
     console.warn(API_URL)
     const requestBody: CrawlPostBody = {
       url: urlInput,
