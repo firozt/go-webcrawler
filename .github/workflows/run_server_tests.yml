@@ -1,4 +1,4 @@
-name: Run Server Tests
+name: Run Server Tests And Deploy
 
 on:
   push:
@@ -7,17 +7,37 @@ on:
     branches: [ "main" ]
 
 jobs:
-  test:
+  test_and_deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.25.4' 
-
-      - name: Run tests
+          go-version: '1.25.4'
+      
+      - name: Run Go tests
         working-directory: ./server
-        run:  go test -tags "fts5" -v ./...
+        run: go test -tags "fts5" -v ./...
+      
+      - name: Write SSH key
+        run: |
+          mkdir -p $HOME/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > $HOME/.ssh/deploy_key
+          chmod 600 $HOME/.ssh/deploy_key
+
+      - name: Cloudflared SSH + Deploy
+        uses: and-fm/cloudflared-ssh-action@v3.1.2
+        with:
+          host: ssh.ramizabdulla.me
+          username: miz
+          private_key_filename: deploy_key
+          private_key_value: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          service_token_id: ${{ secrets.SERVICE_CLIENT_ID }}
+          service_token_secret: ${{ secrets.SERVICE_CLIENT_SECRET }}
+          commands: |
+            cd /home/miz/dev/self-host/go-webcrawler
+            git pull
+            docker compose up -d --build domainsearch_api
