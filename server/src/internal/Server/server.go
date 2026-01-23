@@ -81,10 +81,10 @@ func (s *Server) MiddleWare(method string, next http.HandlerFunc) http.HandlerFu
 // function to start the server, running on given host and port
 func (s *Server) Run() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/api/v1/crawl", s.MiddleWare("POST", s.StartCrawl))
-	mux.HandleFunc("/api/v1/search", s.MiddleWare("GET", s.SearchCrawled))
-	mux.HandleFunc("/api/v1/graph", s.MiddleWare("GET", s.GetGraphData))
-	mux.HandleFunc("/api/v1/health", s.MiddleWare("GET", s.Health))
+	mux.HandleFunc("/domainsearch/v1/crawl", s.MiddleWare("POST", s.StartCrawl))
+	mux.HandleFunc("/domainsearch/v1/search", s.MiddleWare("GET", s.SearchCrawled))
+	mux.HandleFunc("/domainsearch/v1/graph", s.MiddleWare("GET", s.GetGraphData))
+	mux.HandleFunc("/domainsearch/v1/health", s.MiddleWare("GET", s.Health))
 	mux.HandleFunc("/", s.CatchAll)
 	fmt.Printf("Server listening to %v:%v\n", s.hostname, s.port)
 	http.ListenAndServe(fmt.Sprintf("%v:%v", s.hostname, s.port), mux)
